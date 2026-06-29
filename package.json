@@ -1,0 +1,26 @@
+{
+  "name": "@warp12/leaderboard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "deploy:hosting": "yarn build && cd .. && firebase deploy --only hosting:leaderboard --project warp-12"
+  },
+  "dependencies": {
+    "firebase": "^12.15.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "6.30.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "sass": "^1.97.2",
+    "typescript": "~5.9.2",
+    "vite": "^8.0.0"
+  }
+}

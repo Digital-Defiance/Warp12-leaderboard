@@ -1,0 +1,33 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.backLink {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--warp-text-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--warp-accent);
+  }
+}
+
+.transcript {
+  margin: 0;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.85);
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,0 +1,113 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.boardTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.boardTab {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warp-text-muted, #94a3b8);
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  &[data-active='true'] {
+    color: var(--warp-accent, #38bdf8);
+    border-color: rgba(56, 189, 248, 0.45);
+  }
+
+  &:hover {
+    border-color: rgba(56, 189, 248, 0.35);
+    color: var(--warp-accent, #38bdf8);
+  }
+}
+
+.boardBadge {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  padding: 0.12rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.boardDescription {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--warp-text-muted, #94a3b8);
+}
+
+.boardDescriptionBadge {
+  display: inline-block;
+  margin-right: 0.45rem;
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+
+  th,
+  td {
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.65);
+  }
+
+  th {
+    font-family: var(--font-federation, system-ui);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7dd3fc;
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  td {
+    color: #e2e8f0;
+  }
+}
+
+.captainLink {
+  color: #38bdf8;
+  text-decoration: none;
+
+  &:hover {
+    color: #7dd3fc;
+  }
+}
