@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 531.41 111.65">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: Federation, Federation;
+      }
+
+      .cls-1, .cls-2 {
+        font-size: 72px;
+      }
+
+      .cls-1, .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #38bdf8;
+        font-family: FederationWide, FederationWide;
+      }
+
+      .cls-3 {
+        font-family: NovaLightUltraSSiThinUltraCondensed, 'Nova Light Ultra SSi';
+        font-size: 42px;
+      }
+    </style>
+  </defs>
+  <text class="cls-2" transform="translate(17.16 60.98)"><tspan x="0" y="0">Warp</tspan></text>
+  <text class="cls-1" transform="translate(383.22 60.98)"><tspan x="0" y="0">12</tspan></text>
+  <text class="cls-3" transform="translate(353.14 97.29)"><tspan x="0" y="0">Leaderboards and Logs</tspan></text>
+</svg>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Warp 12 Leaderboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Warp 12 dominoes stats, fleet rankings, and published match logs."
+    />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles.scss" />
+    <meta name="theme-color" content="#050816" />
+    <script>
+      (function () {
+        var KEY = 'warp12.http.lastError';
+        var EVT = 'warp12-http-error';
+        function shouldCapture(url) {
+          return (
+            url.indexOf('cloudfunctions.net') !== -1 ||
+            url.indexOf('identitytoolkit.googleapis.com') !== -1 ||
+            url.indexOf('www.googleapis.com/identitytoolkit') !== -1 ||
+            url.indexOf('securetoken.googleapis.com') !== -1 ||
+            url.indexOf('/api/fn/') !== -1
+          );
+        }
+        function persist(status, url, body) {
+          var detail = status + ' ' + url + '\n' + String(body || '').slice(0, 1200);
+          try {
+            localStorage.setItem(KEY, detail);
+          } catch (e) {}
+          console.error('[Warp12 http]', detail);
+          window.dispatchEvent(new Event(EVT));
+        }
+        var origFetch = window.fetch.bind(window);
+        window.fetch = function () {
+          return origFetch.apply(window, arguments).then(function (res) {
+            if (res.status >= 400) {
+              var url = typeof arguments[0] === 'string' ? arguments[0] : arguments[0].url;
+              if (shouldCapture(url)) {
+                res.clone().text().then(function (body) {
+                  persist(res.status, url, body);
+                }).catch(function () {
+                  persist(res.status, url, '');
+                });
+              }
+            }
+            return res;
+          });
+        };
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url) {
+          this.__warp12Url = String(url);
+          return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function () {
+          var xhr = this;
+          xhr.addEventListener('load', function () {
+            var url = xhr.__warp12Url || '';
+            if (xhr.status >= 400 && shouldCapture(url)) {
+              persist(xhr.status, url, xhr.responseText || '');
+            }
+          });
+          return origSend.apply(this, arguments);
+        };
+        window.__warp12HttpCapture = true;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

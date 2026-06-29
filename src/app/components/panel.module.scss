@@ -1,0 +1,56 @@
+.panel {
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.12), transparent 45%),
+    rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 12px;
+}
+
+.panelEyebrow {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  margin: 0 0 0.65rem;
+}
+
+.panelTitle {
+  font-family: var(--font-federation-wide, var(--font-federation, system-ui));
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+  margin: 0 0 0.85rem;
+}
+
+.panelBody {
+  font-family: var(--font-federation, system-ui);
+  color: #cbd5e1;
+  line-height: 1.65;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.emptyState {
+  padding: 1rem 0;
+  color: var(--warp-text-muted);
+  font-size: 0.88rem;
+}
+
+.errorState {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.18);
+  color: #fecaca;
+  font-size: 0.85rem;
+}
+
+.loadingState {
+  color: var(--warp-text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

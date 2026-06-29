@@ -1,0 +1,93 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 150ms ease, transform 150ms ease;
+
+  &:hover {
+    border-color: rgba(56, 189, 248, 0.45);
+    transform: translateY(-1px);
+  }
+}
+
+.cardEyebrow {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.cardTitle {
+  font-family: var(--font-federation-wide, var(--font-federation, system-ui));
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+}
+
+.cardBody {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.roadmap {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.roadmapTitle {
+  font-family: var(--font-federation-wide, var(--font-federation, system-ui));
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  margin: 0 0 0.75rem;
+}
+
+.roadmapList {
+  margin: 0 0 1rem;
+  padding-left: 1.1rem;
+  color: #cbd5e1;
+  font-size: 0.86rem;
+  line-height: 1.6;
+
+  li + li {
+    margin-top: 0.35rem;
+  }
+}
+
+.playLink {
+  display: inline-flex;
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  text-decoration: none;
+
+  &:hover {
+    color: #7dd3fc;
+  }
+}
