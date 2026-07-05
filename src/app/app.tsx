@@ -14,6 +14,7 @@ import { OfficiatePage } from './pages/officiate-page';
 import { OfficiateDetailPage } from './pages/officiate-detail-page';
 import { AdminPage } from './pages/admin-page';
 import { ProfilePage } from './pages/profile-page';
+import { TeiCalculatorPage } from './pages/tei-calculator-page';
 import styles from './app.module.scss';
 import type { ReactNode } from 'react';
 import { Warp12LogoTournament } from './Warp12Logo-tournament.js';
@@ -70,6 +71,9 @@ function AppShell() {
           <NavLink to="/leaderboard" className={navClass}>
             Leaderboard
           </NavLink>
+          <NavLink to="/calculator" className={navClass}>
+            TEI Calc
+          </NavLink>
           <NavLink to="/logs" className={navClass}>
             Logs
           </NavLink>
@@ -94,6 +98,7 @@ function AppShell() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/calculator" element={<TeiCalculatorPage />} />
             <Route path="/logs" element={<MatchLogsPage />} />
             <Route path="/logs/:shareSlug" element={<MatchLogDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />

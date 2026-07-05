@@ -35,6 +35,14 @@ export function HomePage() {
           </span>
         </Link>
 
+        <Link to="/calculator" className={styles.card}>
+          <span className={styles.cardEyebrow}>Offline tool</span>
+          <span className={styles.cardTitle}>TEI scorecard calculator</span>
+          <span className={styles.cardBody}>
+            Enter round pip totals at the table, compute human-pool TEI, and print a scorecard.
+          </span>
+        </Link>
+
         <Link to="/logs" className={styles.card}>
           <span className={styles.cardEyebrow}>Archive</span>
           <span className={styles.cardTitle}>Published Logs</span>
