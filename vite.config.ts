@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { resolve } from 'node:path';
 
 import react from '@vitejs/plugin-react';
@@ -19,5 +20,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+  },
+  test: {
+    name: '@warp12/leaderboard',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
   },
 });

@@ -9,6 +9,9 @@ import {
   rejectRatedMatch,
   submitMatchStandings,
 } from '../../firebase/rated-match-service.js';
+import { getCharter } from '../../firebase/charter-service.js';
+import { charterSummaryLine } from '../../firebase/charter-schema.js';
+import { downloadMatchCertificate } from '../../lib/match-certificate.js';
 import {
   RATED_MATCH_STATUS_LABEL,
   RATED_OBJECTIVE_LABEL,
@@ -24,6 +27,8 @@ export function OfficiateDetailPage() {
   const roles = useWarpRoles();
   const [match, setMatch] = useState<RatedMatchDocument | null>(null);
   const [rows, setRows] = useState<RatedMatchStanding[]>([]);
+  const [charterLine, setCharterLine] = useState<string | null>(null);
+  const [charterSlug, setCharterSlug] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +36,19 @@ export function OfficiateDetailPage() {
   const reload = async () => {
     const doc = await fetchRatedMatch(matchCode);
     setMatch(doc);
+    if (doc?.charterId) {
+      try {
+        const charter = await getCharter({ charterId: doc.charterId });
+        setCharterLine(charterSummaryLine(charter));
+        setCharterSlug(charter.slug);
+      } catch {
+        setCharterLine(doc.charterId);
+        setCharterSlug(null);
+      }
+    } else {
+      setCharterLine(null);
+      setCharterSlug(null);
+    }
     if (doc?.standings.length) {
       setRows(doc.standings);
     } else if (doc) {
@@ -134,6 +152,27 @@ export function OfficiateDetailPage() {
           {RATED_OBJECTIVE_LABEL[match.objective]} · {match.campaignRounds} rounds ·{' '}
           {RATED_MATCH_STATUS_LABEL[match.status]}
         </p>
+        {charterLine && (
+          <p className={panelStyles.panelBody}>
+            Crew charter:{' '}
+            {charterSlug ? (
+              <Link to={`/crews/${charterSlug}`}>{charterLine}</Link>
+            ) : (
+              charterLine
+            )}
+          </p>
+        )}
+        {match.certificate && (
+          <p className={panelStyles.panelBody}>
+            <button
+              type="button"
+              className={formStyles.buttonSecondary}
+              onClick={() => downloadMatchCertificate(match.certificate!)}
+            >
+              Download match certificate (JSON)
+            </button>
+          </p>
+        )}
       </section>
 
       <SignInPanel requireVerified title="Official sign-in" />

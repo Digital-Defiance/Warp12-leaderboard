@@ -47,6 +47,7 @@ export async function createRatedMatch(input: {
   venue?: string;
   notes?: string;
   officialDisplayName: string;
+  charterId?: string;
 }): Promise<{ matchCode: string }> {
   return callFunction('createRatedMatch', input);
 }

@@ -23,10 +23,12 @@ import type {
   RatedObjective,
 } from './schema.js';
 import {
+  displayGroupObjectiveTei,
   displayHumanObjectiveTei,
   displayObjectiveTei,
   normalizeLocalAiStats,
   humanObjectiveTeiStats,
+  groupObjectiveTeiStats,
   objectiveTeiStats,
 } from './schema.js';
 import { formatTopPercentile } from './stats-elo.js';
@@ -154,6 +156,63 @@ export async function fetchHumanPoolLeaderboard(
         stats,
         rated,
         unassistedTei: displayHumanObjectiveTei(stats, objective),
+      };
+    })
+    .filter(({ rated }) => rated.unassistedMatches > 0)
+    .sort((left, right) => {
+      const leftTei = left.unassistedTei ?? 0;
+      const rightTei = right.unassistedTei ?? 0;
+      if (rightTei !== leftTei) {
+        return rightTei - leftTei;
+      }
+      if (right.rated.unassistedWins !== left.rated.unassistedWins) {
+        return right.rated.unassistedWins - left.rated.unassistedWins;
+      }
+      return right.rated.unassistedMatches - left.rated.unassistedMatches;
+    })
+    .slice(0, maxEntries)
+    .map(({ stats, rated, unassistedTei }, index, ranked) => ({
+      rank: index + 1,
+      uid: stats.uid,
+      displayName: stats.displayName,
+      objective,
+      unassistedTei,
+      unassistedPercentile: formatTopPercentile(index + 1, ranked.length),
+      unassistedMatches: rated.unassistedMatches,
+      unassistedWins: rated.unassistedWins,
+      unassistedWinRate:
+        rated.unassistedMatches > 0
+          ? rated.unassistedWins / rated.unassistedMatches
+          : 0,
+    }));
+}
+
+export async function fetchGroupTeiLeaderboard(
+  charterId: string,
+  objective: RatedObjective,
+  maxEntries = 25,
+  charterSeasonKey?: string
+): Promise<HumanPoolLeaderboardEntry[]> {
+  const snapshot = await getDocs(query(statsCollection(), limit(200)));
+
+  return snapshot.docs
+    .map((entry) => entry.data() as PlayerStatsDocument)
+    .map((stats) => {
+      const rated = groupObjectiveTeiStats(
+        stats,
+        charterId,
+        objective,
+        charterSeasonKey
+      );
+      return {
+        stats,
+        rated,
+        unassistedTei: displayGroupObjectiveTei(
+          stats,
+          charterId,
+          objective,
+          charterSeasonKey
+        ),
       };
     })
     .filter(({ rated }) => rated.unassistedMatches > 0)

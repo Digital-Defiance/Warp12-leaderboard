@@ -28,10 +28,26 @@ export function HomePage() {
         </Link>
 
         <Link to="/leaderboard" className={styles.card}>
-          <span className={styles.cardEyebrow}>Rankings</span>
-          <span className={styles.cardTitle}>Verified Leaderboards</span>
+          <span className={styles.cardEyebrow}>Standard</span>
+          <span className={styles.cardTitle}>Global Official ladder</span>
           <span className={styles.cardBody}>
-            Officiated human-pool TEI and replay-verified practice vs AI — unassisted only.
+            Public Warp 12 rankings — Official rules, verified rated play, season leaderboard.
+          </span>
+        </Link>
+
+        <Link to="/crews" className={styles.card}>
+          <span className={styles.cardEyebrow}>Friends</span>
+          <span className={styles.cardTitle}>Crew ladders</span>
+          <span className={styles.cardBody}>
+            Private charters for your table — scoped group TEI separate from the global standard.
+          </span>
+        </Link>
+
+        <Link to="/leaderboard" className={styles.card}>
+          <span className={styles.cardEyebrow}>All pools</span>
+          <span className={styles.cardTitle}>Full leaderboards</span>
+          <span className={styles.cardBody}>
+            Human pool, solo vs AI tiers, and combined verified fleet totals.
           </span>
         </Link>
 

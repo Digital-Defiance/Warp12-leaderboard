@@ -153,6 +153,7 @@ export interface PlayerProfileDocument {
 export interface HumanTeiStats {
   goOut?: ObjectiveTeiStats;
   points?: ObjectiveTeiStats;
+  seasonKey?: string;
 }
 
 export interface PlayerStatsDocument {
@@ -164,10 +165,45 @@ export interface PlayerStatsDocument {
   roundsWon: number;
   totalPoints: number;
   humanTei?: HumanTeiStats;
+  /** Scoped TEI per crew charter (`charterId` → track buckets). */
+  groupTei?: Record<string, HumanTeiStats>;
   localAi?: LocalAiStats;
   bestRoundTimeMs?: number;
   lastPlayedAt?: string;
   updatedAt: string;
+}
+
+export function groupObjectiveTeiStats(
+  stats: PlayerStatsDocument | null | undefined,
+  charterId: string,
+  objective: RatedObjective,
+  charterSeasonKey?: string
+): ObjectiveTeiStats {
+  const key = objectiveTeiKey(objective);
+  const bucket = stats?.groupTei?.[charterId];
+  const activeBucket =
+    bucket &&
+    charterSeasonKey &&
+    bucket.seasonKey &&
+    bucket.seasonKey !== charterSeasonKey
+      ? undefined
+      : bucket;
+  return { ...emptyObjectiveTeiStats(), ...activeBucket?.[key] };
+}
+
+export function displayGroupObjectiveTei(
+  stats: PlayerStatsDocument,
+  charterId: string,
+  objective: RatedObjective,
+  charterSeasonKey?: string
+): number | null {
+  const bucket = groupObjectiveTeiStats(
+    stats,
+    charterId,
+    objective,
+    charterSeasonKey
+  );
+  return displayUnassistedTei(bucket.unassistedTei, bucket.unassistedMatches);
 }
 
 export function humanObjectiveTeiStats(

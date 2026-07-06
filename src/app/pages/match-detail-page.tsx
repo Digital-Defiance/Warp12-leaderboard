@@ -8,6 +8,9 @@ import {
   type RatedMatchDocument,
 } from '../../firebase/rated-match-schema.js';
 import { fetchRatedMatch } from '../../firebase/rated-match-service.js';
+import { getCharter } from '../../firebase/charter-service.js';
+import { charterSummaryLine } from '../../firebase/charter-schema.js';
+import { downloadMatchCertificate } from '../../lib/match-certificate.js';
 import panelStyles from '../components/panel.module.scss';
 import formStyles from '../components/sign-in-panel.module.scss';
 import styles from './matches-page.module.scss';
@@ -15,6 +18,8 @@ import styles from './matches-page.module.scss';
 export function MatchDetailPage() {
   const { matchCode = '' } = useParams();
   const [match, setMatch] = useState<RatedMatchDocument | null>(null);
+  const [charterLine, setCharterLine] = useState<string | null>(null);
+  const [charterSlug, setCharterSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +27,24 @@ export function MatchDetailPage() {
     let cancelled = false;
     setLoading(true);
     void fetchRatedMatch(matchCode)
-      .then((doc) => {
-        if (!cancelled) {
-          setMatch(doc);
-          setError(doc ? null : 'Match not found.');
+      .then(async (doc) => {
+        if (cancelled) {
+          return;
+        }
+        setMatch(doc);
+        setError(doc ? null : 'Match not found.');
+        if (doc?.charterId) {
+          try {
+            const charter = await getCharter({ charterId: doc.charterId });
+            setCharterLine(charterSummaryLine(charter));
+            setCharterSlug(charter.slug);
+          } catch {
+            setCharterLine(doc.charterId);
+            setCharterSlug(null);
+          }
+        } else {
+          setCharterLine(null);
+          setCharterSlug(null);
         }
       })
       .catch((err) => {
@@ -68,9 +87,30 @@ export function MatchDetailPage() {
           {RATED_MATCH_STATUS_LABEL[match.status]}
         </p>
         {match.venue && <p className={panelStyles.panelBody}>Venue: {match.venue}</p>}
+        {charterLine && (
+          <p className={panelStyles.panelBody}>
+            Crew charter:{' '}
+            {charterSlug ? (
+              <Link to={`/crews/${charterSlug}`}>{charterLine}</Link>
+            ) : (
+              charterLine
+            )}
+          </p>
+        )}
         <p className={panelStyles.panelBody}>
           Official: {match.officialDisplayName}
         </p>
+        {match.certificate && (
+          <p className={panelStyles.panelBody}>
+            <button
+              type="button"
+              className={formStyles.buttonSecondary}
+              onClick={() => downloadMatchCertificate(match.certificate!)}
+            >
+              Download match certificate (JSON)
+            </button>
+          </p>
+        )}
       </section>
 
       <SignInPanel requireVerified title="Captain sign-in" />

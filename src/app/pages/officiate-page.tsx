@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { SignInPanel } from '../components/sign-in-panel.js';
 import { useWarpRoles } from '../../firebase/use-warp-roles.js';
 import { useFirebaseAuth } from '../../firebase/auth-context.js';
 import { createRatedMatch } from '../../firebase/rated-match-service.js';
+import { listMyCharters } from '../../firebase/charter-service.js';
+import { charterSummaryLine } from '../../firebase/charter-schema.js';
+import type { PublicCharterView } from '../../firebase/charter-schema.js';
 import type { RatedObjective } from '../../firebase/rated-match-schema.js';
 import panelStyles from '../components/panel.module.scss';
 import formStyles from '../components/sign-in-panel.module.scss';
@@ -18,8 +21,20 @@ export function OfficiatePage() {
   const [campaignRounds, setCampaignRounds] = useState(4);
   const [venue, setVenue] = useState('');
   const [notes, setNotes] = useState('');
+  const [charterId, setCharterId] = useState('');
+  const [crews, setCrews] = useState<PublicCharterView[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!auth.user || auth.user.isAnonymous) {
+      setCrews([]);
+      return;
+    }
+    void listMyCharters().then(setCrews).catch(() => setCrews([]));
+  }, [auth.user]);
+
+  const selectedCrew = crews.find((crew) => crew.charterId === charterId) ?? null;
 
   const handleCreate = async () => {
     if (!auth.user) {
@@ -29,11 +44,12 @@ export function OfficiatePage() {
     setError(null);
     try {
       const result = await createRatedMatch({
-        objective,
-        campaignRounds,
+        objective: selectedCrew?.objective ?? objective,
+        campaignRounds: selectedCrew?.campaignRounds ?? campaignRounds,
         venue,
         notes,
         officialDisplayName: auth.user.displayName ?? 'Match Official',
+        charterId: charterId || undefined,
       });
       navigate(`/officiate/${encodeURIComponent(result.matchCode)}`);
     } catch (err) {
@@ -50,7 +66,8 @@ export function OfficiatePage() {
         <h1 className={panelStyles.panelTitle}>Run a rated offline match</h1>
         <p className={panelStyles.panelBody}>
           Create a match code for captains to check in, enter final standings after
-          play, then approve to apply human-pool TEI.
+          play, then approve to apply TEI. Optionally attach a crew charter so
+          ratings update the crew ladder instead of the global pool.
         </p>
       </section>
 
@@ -71,29 +88,56 @@ export function OfficiatePage() {
         <section className={panelStyles.panel}>
           <div className={formStyles.form}>
             <div className={formStyles.field}>
-              <label htmlFor="objective">Objective</label>
+              <label htmlFor="crew">Crew charter (optional)</label>
               <select
-                id="objective"
-                value={objective}
-                onChange={(event) =>
-                  setObjective(event.target.value as RatedObjective)
-                }
+                id="crew"
+                value={charterId}
+                onChange={(event) => setCharterId(event.target.value)}
               >
-                <option value="points">Points</option>
-                <option value="go-out">Go-out</option>
+                <option value="">Global human pool (no crew)</option>
+                {crews.map((crew) => (
+                  <option key={crew.charterId} value={crew.charterId}>
+                    {charterSummaryLine(crew)}
+                  </option>
+                ))}
               </select>
             </div>
-            <div className={formStyles.field}>
-              <label htmlFor="rounds">Campaign rounds</label>
-              <input
-                id="rounds"
-                type="number"
-                min={1}
-                max={13}
-                value={campaignRounds}
-                onChange={(event) => setCampaignRounds(Number(event.target.value))}
-              />
-            </div>
+            {selectedCrew ? (
+              <p className={panelStyles.panelBody}>
+                Match settings are locked to the crew charter:{' '}
+                {charterSummaryLine(selectedCrew)}.
+                {selectedCrew.isGlobalOfficial
+                  ? ' Approvals also update global TEI.'
+                  : ' Only crew TEI will change.'}
+              </p>
+            ) : (
+              <>
+                <div className={formStyles.field}>
+                  <label htmlFor="objective">Objective</label>
+                  <select
+                    id="objective"
+                    value={objective}
+                    onChange={(event) =>
+                      setObjective(event.target.value as RatedObjective)
+                    }
+                  >
+                    <option value="points">Points</option>
+                    <option value="go-out">Go-out</option>
+                  </select>
+                </div>
+                <div className={formStyles.field}>
+                  <label htmlFor="rounds">Campaign rounds</label>
+                  <input
+                    id="rounds"
+                    type="number"
+                    min={1}
+                    max={13}
+                    value={campaignRounds}
+                    onChange={(event) => setCampaignRounds(Number(event.target.value))}
+                  />
+                </div>
+              </>
+            )}
             <div className={formStyles.field}>
               <label htmlFor="venue">Venue (optional)</label>
               <input

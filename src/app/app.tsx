@@ -15,14 +15,21 @@ import { OfficiateDetailPage } from './pages/officiate-detail-page';
 import { AdminPage } from './pages/admin-page';
 import { ProfilePage } from './pages/profile-page';
 import { TeiCalculatorPage } from './pages/tei-calculator-page';
+import { CrewsPage } from './pages/crews-page';
+import { CrewDetailPage } from './pages/crew-detail-page';
+import { CrewJoinPage } from './pages/crew-join-page';
 import styles from './app.module.scss';
 import type { ReactNode } from 'react';
 import { Warp12LogoTournament } from './Warp12Logo-tournament.js';
+import { Warp12LogoCrews } from './Warp12Logo-crews.js';
 
 const BRIDGE_URL = 'https://warp12.app';
 
 const LOGO_MAP: { pattern: string; logo: ReactNode }[] = [
   { pattern: '/admin', logo: <Warp12LogoTournament width={280} /> },
+  { pattern: '/crews', logo: <Warp12LogoCrews width={280} /> },
+  { pattern: '/crews/:slug/join', logo: <Warp12LogoCrews width={280} /> },
+  { pattern: '/crews/:slug', logo: <Warp12LogoCrews width={280} /> },
   { pattern: '/matches', logo: <Warp12LogoTournament width={280} /> },
   { pattern: '/matches/:matchCode?', logo: <Warp12LogoTournament width={280} /> },
   { pattern: '/officiate', logo: <Warp12LogoTournament width={280} /> },
@@ -68,6 +75,9 @@ function AppShell() {
           <NavLink to="/officiate" className={navClass}>
             Officiate
           </NavLink>
+          <NavLink to="/crews" className={navClass}>
+            Crews
+          </NavLink>
           <NavLink to="/leaderboard" className={navClass}>
             Leaderboard
           </NavLink>
@@ -97,6 +107,9 @@ function AppShell() {
             <Route path="/officiate/:matchCode" element={<OfficiateDetailPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/" element={<HomePage />} />
+            <Route path="/crews" element={<CrewsPage />} />
+            <Route path="/crews/:slug/join" element={<CrewJoinPage />} />
+            <Route path="/crews/:slug" element={<CrewDetailPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/calculator" element={<TeiCalculatorPage />} />
             <Route path="/logs" element={<MatchLogsPage />} />
@@ -108,7 +121,6 @@ function AppShell() {
       </main>
 
       <footer className={styles.footer}>
-        Same Firebase project as the bridge — stats and logs at leaderboard.warp12.app.{' '}
         <a href={BRIDGE_URL} className={styles.footerLink}>
           Return to the bridge
         </a>

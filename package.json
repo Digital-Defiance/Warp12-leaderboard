@@ -10,6 +10,7 @@
     "deploy:hosting": "yarn build && cd .. && firebase deploy --only hosting:leaderboard --project warp-12"
   },
   "dependencies": {
+    "@warp12/tei-core": "workspace:*",
     "firebase": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

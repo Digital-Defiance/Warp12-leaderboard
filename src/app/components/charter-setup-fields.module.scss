@@ -1,0 +1,26 @@
+.sectionTitle {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+  color: #e2e8f0;
+  line-height: 1.45;
+}
+
+.checkboxRow input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.subOption {
+  margin-left: 1.5rem;
+}

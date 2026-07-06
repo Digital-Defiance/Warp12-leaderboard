@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { aiSkillTacticalClassLabel } from '../../lib/tactical-class.js';
 import statCardStyles from '../components/stat-card.module.scss';
@@ -10,6 +10,7 @@ import {
   fetchPlayerStats,
   upsertPlayerProfile,
 } from '../../firebase/leaderboard-service.js';
+import { getCharter, listMyCharters } from '../../firebase/charter-service.js';
 import { isFirebaseConfigured } from '../../firebase/config.js';
 import type {
   AiSkillLevel,
@@ -19,7 +20,10 @@ import type {
 } from '../../firebase/schema.js';
 import {
   assistedMatchStats,
+  displayGroupObjectiveTei,
+  displayHumanObjectiveTei,
   displayObjectiveTei,
+  groupObjectiveTeiStats,
   normalizeLocalAiStats,
   emptyLocalAiStats,
   localAiWinRate,
@@ -28,7 +32,18 @@ import {
   unassistedMatchStats,
 } from '../../firebase/schema.js';
 import { verifiedFleetTotals } from '../../firebase/verified-stats.js';
+import type { PublicCharterView } from '../../firebase/charter-schema.js';
 import styles from './profile-page.module.scss';
+
+interface CrewTeiRow {
+  charterId: string;
+  name: string;
+  slug: string;
+  goOutTei: number | null;
+  pointsTei: number | null;
+  goOutMatches: number;
+  pointsMatches: number;
+}
 
 function emptyStats(uid: string, displayName: string): PlayerStatsDocument {
   const now = new Date().toISOString();
@@ -70,6 +85,7 @@ export function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [crewTeiRows, setCrewTeiRows] = useState<CrewTeiRow[]>([]);
   const configured = isFirebaseConfigured();
 
   useEffect(() => {
@@ -96,6 +112,43 @@ export function ProfilePage() {
         setDisplayName(loadedProfile?.displayName ?? 'Captain');
         setBio(loadedProfile?.bio ?? '');
         setGamingIds(loadedProfile?.gamingIds ?? {});
+
+        if (loadedStats) {
+          const charterIds = Object.keys(loadedStats.groupTei ?? {});
+          let charters: PublicCharterView[] = [];
+          if (isOwnProfile && user && !user.isAnonymous) {
+            charters = await listMyCharters();
+          }
+          const charterById = new Map(charters.map((c) => [c.charterId, c]));
+          const rows: CrewTeiRow[] = [];
+          for (const charterId of charterIds) {
+            let meta = charterById.get(charterId);
+            if (!meta) {
+              try {
+                meta = await getCharter({ charterId });
+              } catch {
+                meta = undefined;
+              }
+            }
+            const goOut = groupObjectiveTeiStats(loadedStats, charterId, 'go-out');
+            const points = groupObjectiveTeiStats(loadedStats, charterId, 'points');
+            rows.push({
+              charterId,
+              name: meta?.name ?? charterId,
+              slug: meta?.slug ?? charterId,
+              goOutTei: displayGroupObjectiveTei(loadedStats, charterId, 'go-out'),
+              pointsTei: displayGroupObjectiveTei(loadedStats, charterId, 'points'),
+              goOutMatches: goOut.unassistedMatches,
+              pointsMatches: points.unassistedMatches,
+            });
+          }
+          rows.sort((a, b) => a.name.localeCompare(b.name));
+          if (!cancelled) {
+            setCrewTeiRows(rows);
+          }
+        } else if (!cancelled) {
+          setCrewTeiRows([]);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load profile');
@@ -111,7 +164,7 @@ export function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [configured, ready, targetUid]);
+  }, [configured, ready, targetUid, isOwnProfile, user]);
 
   async function handleSave() {
     if (!user || !isOwnProfile) {
@@ -195,7 +248,55 @@ export function ProfilePage() {
             <p className={statCardStyles.label}>Practice vs AI</p>
             <p className={statCardStyles.value}>{verified.practiceAiMatches}</p>
           </article>
+          <article className={statCardStyles.card}>
+            <p className={statCardStyles.label}>Global go-out TEI</p>
+            <p className={statCardStyles.value}>
+              {displayHumanObjectiveTei(visibleStats, 'go-out') ?? '—'}
+            </p>
+          </article>
+          <article className={statCardStyles.card}>
+            <p className={statCardStyles.label}>Global points TEI</p>
+            <p className={statCardStyles.value}>
+              {displayHumanObjectiveTei(visibleStats, 'points') ?? '—'}
+            </p>
+          </article>
         </div>
+      )}
+
+      {crewTeiRows.length > 0 && !loading && (
+        <section className={styles.localAiSection}>
+          <h2 className={styles.localAiTitle}>Crew TEI</h2>
+          <p className={styles.localAiLead}>
+            Unassisted rated matches scoped to each crew charter. Global Official
+            rows also feed the human pool ladder.
+          </p>
+          <div className={styles.localAiTableWrap}>
+            <table className={styles.localAiTable}>
+              <thead>
+                <tr>
+                  <th>Crew</th>
+                  <th>Go-out TEI</th>
+                  <th>Go-out matches</th>
+                  <th>Points TEI</th>
+                  <th>Points matches</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crewTeiRows.map((row) => (
+                  <tr key={row.charterId}>
+                    <td>
+                      <Link to={`/crews/${row.slug}`}>{row.name}</Link>
+                    </td>
+                    <td>{row.goOutTei ?? '—'}</td>
+                    <td>{row.goOutMatches}</td>
+                    <td>{row.pointsTei ?? '—'}</td>
+                    <td>{row.pointsMatches}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       <section className={styles.localAiSection}>

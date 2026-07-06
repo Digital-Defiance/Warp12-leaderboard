@@ -5,6 +5,8 @@ import { isVerifiedUser } from '../../firebase/auth-actions.js';
 import { useFirebaseAuth } from '../../firebase/auth-context.js';
 import { useWarpRoles } from '../../firebase/use-warp-roles.js';
 import { bootstrapAdmin, setUserRoles } from '../../firebase/rated-match-service.js';
+import { resetGlobalOfficialSeason } from '../../firebase/charter-service.js';
+import { GLOBAL_OFFICIAL_PLAYER_COUNTS } from '../../firebase/charter-schema.js';
 import type { WarpRole } from '../../firebase/rated-match-schema.js';
 import panelStyles from '../components/panel.module.scss';
 import formStyles from '../components/sign-in-panel.module.scss';
@@ -28,9 +30,30 @@ export function AdminPage() {
   const [grantOfficial, setGrantOfficial] = useState(true);
   const [grantAdmin, setGrantAdmin] = useState(false);
   const [bootstrapSecret, setBootstrapSecret] = useState('');
+  const [seasonLabel, setSeasonLabel] = useState('');
+  const [seasonKey, setSeasonKey] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const handleBootstrap = async () => {
+    if (!auth.user || !isVerifiedUser(auth.user)) {
+      setError('Sign in with Google above before claiming admin.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await auth.user.getIdToken(true);
+      await bootstrapAdmin(bootstrapSecret);
+      await roles.refresh();
+      setMessage('Bootstrap complete — you are now admin. Refresh token applied.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Bootstrap failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleSetRoles = async () => {
     const nextRoles: WarpRole[] = [];
@@ -56,20 +79,25 @@ export function AdminPage() {
     }
   };
 
-  const handleBootstrap = async () => {
-    if (!auth.user || !isVerifiedUser(auth.user)) {
-      setError('Sign in with Google above before claiming admin.');
+  const handleSeasonReset = async () => {
+    if (!seasonLabel.trim()) {
+      setError('Enter a season label (e.g. 2026 Fall).');
       return;
     }
     setBusy(true);
     setError(null);
+    setMessage(null);
     try {
-      await auth.user.getIdToken(true);
-      await bootstrapAdmin(bootstrapSecret);
-      await roles.refresh();
-      setMessage('Bootstrap complete — you are now admin. Refresh token applied.');
+      const result = await resetGlobalOfficialSeason({
+        seasonLabel: seasonLabel.trim(),
+        seasonKey: seasonKey.trim() || undefined,
+        playerCounts: [...GLOBAL_OFFICIAL_PLAYER_COUNTS],
+      });
+      setMessage(
+        `Global Official season updated to ${result.seasonLabel} (${result.seasonKey}). Crew TEI buckets roll forward on the next rated match.`
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bootstrap failed.');
+      setError(err instanceof Error ? err.message : 'Season reset failed.');
     } finally {
       setBusy(false);
     }
@@ -168,8 +196,9 @@ export function AdminPage() {
       )}
 
       {roles.isAdmin && (
-        <section className={panelStyles.panel}>
-          <h2 className={panelStyles.panelTitle}>Grant roles</h2>
+        <>
+          <section className={panelStyles.panel}>
+            <h2 className={panelStyles.panelTitle}>Grant roles</h2>
           <p className={panelStyles.panelBody}>
             Paste a Firebase uid (Authentication → Users in the console). To
             officiate yourself, grant <code>match_official</code> on your own uid.
@@ -209,6 +238,45 @@ export function AdminPage() {
             </button>
           </div>
         </section>
+
+          <section className={panelStyles.panel}>
+            <h2 className={panelStyles.panelTitle}>Global Official season</h2>
+            <p className={panelStyles.panelBody}>
+              Soft-reset crew TEI ladders for open Global Official charters (
+              {[...GLOBAL_OFFICIAL_PLAYER_COUNTS].join('p, ')}p). Archives the
+              prior season label and starts fresh <code>groupTei</code> buckets —
+              global human-pool TEI is unchanged.
+            </p>
+            <div className={formStyles.form}>
+              <div className={formStyles.field}>
+                <label htmlFor="season-label">Season label</label>
+                <input
+                  id="season-label"
+                  value={seasonLabel}
+                  onChange={(event) => setSeasonLabel(event.target.value)}
+                  placeholder="2026 Fall"
+                />
+              </div>
+              <div className={formStyles.field}>
+                <label htmlFor="season-key">Season key (optional)</label>
+                <input
+                  id="season-key"
+                  value={seasonKey}
+                  onChange={(event) => setSeasonKey(event.target.value)}
+                  placeholder="2026-fall"
+                />
+              </div>
+              <button
+                type="button"
+                className={formStyles.buttonPrimary}
+                disabled={busy || !seasonLabel.trim()}
+                onClick={() => void handleSeasonReset()}
+              >
+                Start new season
+              </button>
+            </div>
+          </section>
+        </>
       )}
 
       {message && <p className={styles.success}>{message}</p>}

@@ -2,6 +2,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { RATED_OBJECTIVE_LABEL } from '../../firebase/rated-match-schema.js';
+import { useFirebaseAuth } from '../../firebase/auth-context.js';
+import {
+  getCharterLeaderboard,
+  listMyCharters,
+} from '../../firebase/charter-service.js';
+import {
+  charterSummaryLine,
+  type PublicCharterView,
+} from '../../firebase/charter-schema.js';
+import { fetchPlayerStats } from '../../firebase/leaderboard-service.js';
+import {
+  groupObjectiveTeiStats,
+  humanObjectiveTeiStats,
+} from '../../firebase/schema.js';
 import {
   computeHumanTei,
   DEFAULT_ROUNDS_BY_OBJECTIVE,
@@ -37,13 +51,30 @@ function defaultCaptains(): CalculatorCaptain[] {
 
 function defaultRounds(
   captainIds: readonly string[],
-  objective: CalculatorObjective
+  objective: CalculatorObjective,
+  roundCount?: number
 ): CalculatorRound[] {
-  const count = DEFAULT_ROUNDS_BY_OBJECTIVE[objective];
+  const count = roundCount ?? DEFAULT_ROUNDS_BY_OBJECTIVE[objective];
   return Array.from({ length: count }, () => ({
     id: createId(),
     pipsByCaptainId: emptyPips(captainIds),
   }));
+}
+
+function captainsForCharter(
+  charter: PublicCharterView,
+  current: readonly CalculatorCaptain[]
+): CalculatorCaptain[] {
+  const next = current.slice(0, charter.playerCount);
+  while (next.length < charter.playerCount) {
+    next.push({
+      id: createId(),
+      name: '',
+      startingTei: 1000,
+      priorMatches: 0,
+    });
+  }
+  return next;
 }
 
 function rankClass(rank: number): string {
@@ -77,9 +108,14 @@ function formatDelta(delta: number): string {
 }
 
 export function TeiCalculatorPage() {
+  const auth = useFirebaseAuth();
   const [printInk, setPrintInk] = useState(false);
   const [objective, setObjective] = useState<CalculatorObjective>('points');
   const [missionLabel, setMissionLabel] = useState('');
+  const [previewCharterId, setPreviewCharterId] = useState('');
+  const [myCharters, setMyCharters] = useState<PublicCharterView[]>([]);
+  const [crewBusy, setCrewBusy] = useState(false);
+  const [crewNotice, setCrewNotice] = useState<string | null>(null);
   const [captains, setCaptains] = useState(defaultCaptains);
   const [rounds, setRounds] = useState(() =>
     defaultRounds(
@@ -92,6 +128,167 @@ export function TeiCalculatorPage() {
 
   const captainIds = useMemo(() => captains.map((captain) => captain.id), [captains]);
   const isGoOut = objective === 'go-out';
+  const selectedCharter =
+    myCharters.find((crew) => crew.charterId === previewCharterId) ?? null;
+  const charterLocked = selectedCharter !== null;
+  const teiPoolLabel = selectedCharter
+    ? selectedCharter.isGlobalOfficial
+      ? 'Global Official (crew + global pools)'
+      : `${selectedCharter.name} crew`
+    : 'Global human pool';
+
+  useEffect(() => {
+    if (!auth.user || auth.user.isAnonymous) {
+      setMyCharters([]);
+      return;
+    }
+    void listMyCharters().then(setMyCharters).catch(() => setMyCharters([]));
+  }, [auth.user]);
+
+  const applyCharterTemplate = (charter: PublicCharterView) => {
+    const nextCaptains = captainsForCharter(charter, captains);
+    const nextObjective = charter.objective;
+    setObjective(nextObjective);
+    setCaptains(nextCaptains);
+    setRounds(
+      defaultRounds(
+        nextCaptains.map((captain) => captain.id),
+        nextObjective,
+        nextObjective === 'points' ? charter.campaignRounds : 1
+      )
+    );
+    setResult(null);
+    setError(null);
+    setCrewNotice(null);
+  };
+
+  const handlePreviewCharterChange = (charterId: string) => {
+    setPreviewCharterId(charterId);
+    setResult(null);
+    setError(null);
+    setCrewNotice(null);
+    if (!charterId) {
+      return;
+    }
+    const charter = myCharters.find((crew) => crew.charterId === charterId);
+    if (charter) {
+      applyCharterTemplate(charter);
+    }
+  };
+
+  const loadCrewLadderTei = async () => {
+    if (!selectedCharter) {
+      return;
+    }
+    setCrewBusy(true);
+    setCrewNotice(null);
+    setError(null);
+    try {
+      const { entries } = await getCharterLeaderboard({
+        charterId: selectedCharter.charterId,
+      });
+      const roster = entries.slice(0, selectedCharter.playerCount);
+      const nextCaptains = captainsForCharter(selectedCharter, roster.map((entry) => ({
+        id: entry.uid,
+        name: entry.displayName,
+        startingTei: entry.tei ?? 1000,
+        priorMatches: entry.matches,
+      })));
+      setCaptains(nextCaptains);
+      setResult(null);
+      setCrewNotice(
+        roster.length > 0
+          ? `Loaded ${roster.length} crew member${roster.length === 1 ? '' : 's'} from the ladder.`
+          : 'No crew ratings yet — using default 1000 TEI placeholders.'
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load crew ladder.');
+    } finally {
+      setCrewBusy(false);
+    }
+  };
+
+  const loadGlobalPoolTei = async () => {
+    if (!auth.user || auth.user.isAnonymous) {
+      return;
+    }
+    setCrewBusy(true);
+    setCrewNotice(null);
+    setError(null);
+    try {
+      const stats = await fetchPlayerStats(auth.user.uid);
+      if (!stats) {
+        setCrewNotice('No saved global TEI on your profile yet.');
+        return;
+      }
+      const track = humanObjectiveTeiStats(stats, objective);
+      setCaptains((current) =>
+        current.map((captain, index) =>
+          index === 0
+            ? {
+                ...captain,
+                name: captain.name || stats.displayName,
+                startingTei: track.unassistedTei ?? captain.startingTei,
+                priorMatches: track.unassistedMatches,
+              }
+            : captain
+        )
+      );
+      setResult(null);
+      setCrewNotice('Loaded your global human-pool TEI into the first captain row.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load profile TEI.');
+    } finally {
+      setCrewBusy(false);
+    }
+  };
+
+  const loadDualPoolTei = async () => {
+    if (!selectedCharter?.isGlobalOfficial || !auth.user || auth.user.isAnonymous) {
+      return;
+    }
+    setCrewBusy(true);
+    setCrewNotice(null);
+    setError(null);
+    try {
+      const [leaderboard, stats] = await Promise.all([
+        getCharterLeaderboard({ charterId: selectedCharter.charterId }),
+        fetchPlayerStats(auth.user.uid),
+      ]);
+      const globalTrack = stats
+        ? humanObjectiveTeiStats(stats, objective)
+        : null;
+      const crewTrack = stats
+        ? groupObjectiveTeiStats(stats, selectedCharter.charterId, objective)
+        : null;
+      const roster = leaderboard.entries.slice(0, selectedCharter.playerCount);
+      const nextCaptains = captainsForCharter(
+        selectedCharter,
+        roster.map((entry) => ({
+          id: entry.uid,
+          name: entry.displayName,
+          startingTei: entry.tei ?? 1000,
+          priorMatches: entry.matches,
+        }))
+      );
+      setCaptains(nextCaptains);
+      setResult(null);
+      const you = roster.find((entry) => entry.uid === auth.user?.uid);
+      setCrewNotice(
+        you
+          ? `Crew ladder loaded. Your crew TEI: ${you.tei ?? '—'} · global: ${
+              globalTrack?.unassistedTei ?? '—'
+            } (same Δ applies to each pool when rated).`
+          : `Crew ladder loaded. Your global TEI: ${
+              globalTrack?.unassistedTei ?? '—'
+            } · crew bucket: ${crewTrack?.unassistedTei ?? '—'}.`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load TEI pools.');
+    } finally {
+      setCrewBusy(false);
+    }
+  };
 
   const syncRoundKeys = (
     nextCaptains: readonly CalculatorCaptain[],
@@ -108,14 +305,23 @@ export function TeiCalculatorPage() {
   };
 
   const handleObjectiveChange = (nextObjective: CalculatorObjective) => {
+    if (charterLocked && selectedCharter && nextObjective !== selectedCharter.objective) {
+      return;
+    }
     setObjective(nextObjective);
-    setRounds(defaultRounds(captainIds, nextObjective));
+    setRounds(
+      defaultRounds(
+        captainIds,
+        nextObjective,
+        nextObjective === 'points' ? selectedCharter?.campaignRounds : 1
+      )
+    );
     setResult(null);
     setError(null);
   };
 
   const addCaptain = () => {
-    if (captains.length >= MAX_CAPTAINS) {
+    if (captains.length >= MAX_CAPTAINS || charterLocked) {
       return;
     }
     const captain: CalculatorCaptain = {
@@ -131,7 +337,7 @@ export function TeiCalculatorPage() {
   };
 
   const removeCaptain = (id: string) => {
-    if (captains.length <= MIN_CAPTAINS) {
+    if (captains.length <= MIN_CAPTAINS || charterLocked) {
       return;
     }
     const nextCaptains = captains.filter((captain) => captain.id !== id);
@@ -151,7 +357,7 @@ export function TeiCalculatorPage() {
   };
 
   const addRound = () => {
-    if (isGoOut) {
+    if (isGoOut || charterLocked) {
       return;
     }
     setRounds((current) => [
@@ -162,7 +368,7 @@ export function TeiCalculatorPage() {
   };
 
   const removeRound = () => {
-    if (isGoOut || rounds.length <= 1) {
+    if (isGoOut || rounds.length <= 1 || charterLocked) {
       return;
     }
     setRounds((current) => current.slice(0, -1));
@@ -224,6 +430,8 @@ export function TeiCalculatorPage() {
   const handleReset = () => {
     const freshCaptains = defaultCaptains();
     setMissionLabel('');
+    setPreviewCharterId('');
+    setCrewNotice(null);
     setObjective('points');
     setCaptains(freshCaptains);
     setRounds(defaultRounds(freshCaptains.map((captain) => captain.id), 'points'));
@@ -251,11 +459,89 @@ export function TeiCalculatorPage() {
         <h1 className={panelStyles.panelTitle}>Campaign scorecard calculator</h1>
         <p className={styles.disclaimer}>
           Offline fan tool for living-room Mexican Train — pick your objective, enter scores,
-          then compute human-pool TEI updates (TEI spec §6.5). Results are not submitted to
-          the leaderboard; use{' '}
-          <a href="/officiate">officiated matches</a> for authoritative ratings.
+          then compute TEI updates (TEI spec §6.5). Results are not saved; use{' '}
+          <a href="/officiate">officiated matches</a> or online rated sectors for
+          authoritative ratings.
         </p>
       </section>
+
+      {myCharters.length > 0 && (
+        <section className={`${panelStyles.panel} ${styles.noPrint}`}>
+          <h2 className={panelStyles.panelTitle}>Crew preview (optional)</h2>
+          <p className={styles.footerNote}>
+            Same calculator — choose which TEI pool you are simulating. Crew charters lock
+            fleet size and objective to the charter. Global Official updates both crew and
+            global ladders when a match is rated for real.
+          </p>
+          <div className={styles.missionField} style={{ marginTop: '0.75rem' }}>
+            <label htmlFor="crew-preview">Preview pool</label>
+            <select
+              id="crew-preview"
+              className={styles.select}
+              value={previewCharterId}
+              onChange={(event) => handlePreviewCharterChange(event.target.value)}
+            >
+              <option value="">Global human pool (manual TEI)</option>
+              {myCharters.map((crew) => (
+                <option key={crew.charterId} value={crew.charterId}>
+                  {charterSummaryLine(crew)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedCharter && (
+            <p className={styles.footerNote} style={{ marginTop: '0.5rem' }}>
+              Charter: {charterSummaryLine(selectedCharter)}
+              {selectedCharter.isGlobalOfficial
+                ? ' — rated play updates crew and global TEI.'
+                : ' — rated play updates crew TEI only.'}
+            </p>
+          )}
+          <div className={styles.toolbar} style={{ marginTop: '0.75rem' }}>
+            <div className={styles.toolbarGroup}>
+              {selectedCharter ? (
+                <button
+                  type="button"
+                  className={formStyles.buttonSecondary}
+                  disabled={crewBusy}
+                  onClick={() => void loadCrewLadderTei()}
+                >
+                  {crewBusy ? 'Loading…' : 'Load crew ladder TEI'}
+                </button>
+              ) : (
+                auth.user &&
+                !auth.user.isAnonymous && (
+                  <button
+                    type="button"
+                    className={formStyles.buttonSecondary}
+                    disabled={crewBusy}
+                    onClick={() => void loadGlobalPoolTei()}
+                  >
+                    {crewBusy ? 'Loading…' : 'Load my global TEI'}
+                  </button>
+                )
+              )}
+              {selectedCharter?.isGlobalOfficial &&
+                auth.user &&
+                !auth.user.isAnonymous && (
+                  <button
+                    type="button"
+                    className={formStyles.buttonSecondary}
+                    disabled={crewBusy}
+                    onClick={() => void loadDualPoolTei()}
+                  >
+                    {crewBusy ? 'Loading…' : 'Load Global Official pools'}
+                  </button>
+                )}
+            </div>
+          </div>
+          {crewNotice && (
+            <p className={styles.footerNote} style={{ marginTop: '0.5rem' }}>
+              {crewNotice}
+            </p>
+          )}
+        </section>
+      )}
 
       <section className={`${panelStyles.panel} ${styles.noPrint}`}>
         <h2 className={panelStyles.panelTitle}>Mission</h2>
@@ -266,6 +552,7 @@ export function TeiCalculatorPage() {
               id="objective"
               className={styles.select}
               value={objective}
+              disabled={charterLocked}
               onChange={(event) =>
                 handleObjectiveChange(event.target.value as CalculatorObjective)
               }
@@ -298,7 +585,7 @@ export function TeiCalculatorPage() {
                 type="button"
                 className={styles.roundButton}
                 onClick={removeRound}
-                disabled={rounds.length <= 1}
+                disabled={rounds.length <= 1 || charterLocked}
                 aria-label="Remove last round"
               >
                 −
@@ -308,6 +595,7 @@ export function TeiCalculatorPage() {
                 type="button"
                 className={styles.roundButton}
                 onClick={addRound}
+                disabled={charterLocked}
                 aria-label="Add round"
               >
                 +
@@ -326,7 +614,7 @@ export function TeiCalculatorPage() {
             type="button"
             className={styles.iconButton}
             onClick={addCaptain}
-            disabled={captains.length >= MAX_CAPTAINS}
+            disabled={captains.length >= MAX_CAPTAINS || charterLocked}
           >
             Add captain
           </button>
@@ -377,7 +665,7 @@ export function TeiCalculatorPage() {
                 type="button"
                 className={styles.rowRemove}
                 onClick={() => removeCaptain(captain.id)}
-                disabled={captains.length <= MIN_CAPTAINS}
+                disabled={captains.length <= MIN_CAPTAINS || charterLocked}
               >
                 Remove
               </button>
@@ -385,8 +673,8 @@ export function TeiCalculatorPage() {
           ))}
         </div>
         <p className={styles.footerNote} style={{ marginTop: '0.75rem' }}>
-          Rated N = human-pool matches already played on the {RATED_OBJECTIVE_LABEL[objective]}{' '}
-          track (sets K-factor: 40 / 32 / 24).
+          Rated N = matches already played on the {RATED_OBJECTIVE_LABEL[objective]}{' '}
+          track in the <strong>{teiPoolLabel}</strong> bucket (sets K-factor: 40 / 32 / 24).
         </p>
       </section>
 
@@ -462,7 +750,7 @@ export function TeiCalculatorPage() {
               {missionLabel.trim() || 'Warp 12 campaign scorecard'}
             </h2>
             <p className={styles.printMeta}>
-              {RATED_OBJECTIVE_LABEL[result.objective]} track · human-pool TEI ·{' '}
+              {RATED_OBJECTIVE_LABEL[result.objective]} track · {teiPoolLabel} ·{' '}
               {result.objective === 'points'
                 ? `${result.roundCount} round${result.roundCount === 1 ? '' : 's'}`
                 : 'single sector'}{' '}
