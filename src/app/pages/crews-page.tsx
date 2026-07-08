@@ -289,6 +289,7 @@ export function CrewsPage() {
                 value={charterSetup}
                 onChange={setCharterSetup}
                 disabled={busy}
+                playerCount={playerCount}
               />
               <button
                 type="button"

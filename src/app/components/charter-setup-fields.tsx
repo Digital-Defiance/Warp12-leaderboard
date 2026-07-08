@@ -23,6 +23,8 @@ interface CharterSetupFieldsProps {
   value: CharterSetupValue;
   onChange: (value: CharterSetupValue) => void;
   disabled?: boolean;
+  /** Charter fleet size — the hand-size option only applies to 7–8 captains. */
+  playerCount?: number;
 }
 
 function CheckboxRow({
@@ -53,6 +55,7 @@ export function CharterSetupFields({
   value,
   onChange,
   disabled = false,
+  playerCount,
 }: CharterSetupFieldsProps) {
   const setModules = (patch: CharterModulesInput) =>
     onChange({ ...value, modules: { ...value.modules, ...patch } });
@@ -112,6 +115,27 @@ export function CharterSetupFields({
           <option value={0}>0 (pips — Warp 12 default)</option>
         </select>
       </div>
+
+      {(playerCount ?? 0) >= 7 ? (
+        <div className={formStyles.field}>
+          <label htmlFor="charter-large-fleet-hand-size">
+            Large fleet hand size (7–8 captains)
+          </label>
+          <select
+            id="charter-large-fleet-hand-size"
+            disabled={disabled}
+            value={value.houseRules.largeFleetHandSize ?? 10}
+            onChange={(e) =>
+              setHouseRules({
+                largeFleetHandSize: Number(e.target.value) === 11 ? 11 : 10,
+              })
+            }
+          >
+            <option value={10}>10 tiles (Warp 12 default)</option>
+            <option value={11}>11 tiles (Galt / University Games)</option>
+          </select>
+        </div>
+      ) : null}
 
       <CheckboxRow
         checked={value.modules.subspaceFracture ?? false}
