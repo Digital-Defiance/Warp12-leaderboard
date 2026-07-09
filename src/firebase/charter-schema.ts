@@ -10,7 +10,7 @@ export interface PublicCharterView {
   campaignRounds: number;
   modules?: {
     salamanderPenalty: boolean;
-    qContinuum: boolean;
+    continuum: boolean;
     subspaceFracture: boolean;
     subspaceFractureScope: 'own-trail' | 'all-captains' | 'all-doubles';
   };

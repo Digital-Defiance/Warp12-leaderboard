@@ -90,11 +90,11 @@ export function CharterSetupFields({
         Module Beta — Salamander penalty
       </CheckboxRow>
       <CheckboxRow
-        checked={value.modules.qContinuum ?? false}
+        checked={value.modules.continuum ?? false}
         disabled={disabled}
-        onChange={(checked) => setModules({ qContinuum: checked })}
+        onChange={(checked) => setModules({ continuum: checked })}
       >
-        Module Alpha — Q-Continuum
+        Module Alpha — Continuum
       </CheckboxRow>
 
       <h3 className={styles.sectionTitle}>Game options</h3>
@@ -228,7 +228,7 @@ export function CharterSetupFields({
         }
       >
         Pass Red Alert without drawing or shields down — only for the captain who
-        charted the double, and only before it passes (Caution phase)
+        charted the double, and only before it passes (Yellow alert)
       </CheckboxRow>
       <CheckboxRow
         checked={value.houseRules.manualShieldControl ?? false}
