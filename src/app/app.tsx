@@ -3,7 +3,6 @@ import { Link, matchPath, NavLink, Route, Routes, useLocation } from 'react-rout
 import { FirebaseAuthProvider } from '../firebase/auth-context.js';
 import { AuthNotice } from './components/auth-notice.js';
 import { HttpErrorNotice } from './components/http-error-notice.js';
-import { Warp12Logo } from './Warp12Logo';
 import { HomePage } from './pages/home-page';
 import { LeaderboardPage } from './pages/leaderboard-page';
 import { MatchLogDetailPage } from './pages/match-log-detail-page';
@@ -19,22 +18,20 @@ import { CrewsPage } from './pages/crews-page';
 import { CrewDetailPage } from './pages/crew-detail-page';
 import { CrewJoinPage } from './pages/crew-join-page';
 import styles from './app.module.scss';
-import type { ReactNode } from 'react';
-import { Warp12LogoTournament } from './Warp12Logo-tournament.js';
-import { Warp12LogoCrews } from './Warp12Logo-crews.js';
+import { IWDFLogo } from './IWDFLogo.js';
 
 const BRIDGE_URL = 'https://warp12.app';
 
-const LOGO_MAP: { pattern: string; logo: ReactNode }[] = [
-  { pattern: '/admin', logo: <Warp12LogoTournament width={280} /> },
-  { pattern: '/crews', logo: <Warp12LogoCrews width={280} /> },
-  { pattern: '/crews/:slug/join', logo: <Warp12LogoCrews width={280} /> },
-  { pattern: '/crews/:slug', logo: <Warp12LogoCrews width={280} /> },
-  { pattern: '/matches', logo: <Warp12LogoTournament width={280} /> },
-  { pattern: '/matches/:matchCode?', logo: <Warp12LogoTournament width={280} /> },
-  { pattern: '/officiate', logo: <Warp12LogoTournament width={280} /> },
-  { pattern: '/officiate/:matchCode?', logo: <Warp12LogoTournament width={280} /> },
-  { pattern: '/', logo: <Warp12Logo width={280} /> }, // everything else uses the default logo
+const SLUG_MAP: { pattern: string; slug: string }[] = [
+  { pattern: '/admin', slug: "Admin" },
+  { pattern: '/crews', slug: "Crews and Charters" },
+  { pattern: '/crews/:slug/join', slug: "Crews and Charters" },
+  { pattern: '/crews/:slug', slug: "Crews and Charters" },
+  { pattern: '/matches', slug: "Tournament Reporting" },
+  { pattern: '/matches/:matchCode?', slug: "Tournament Reporting" },
+  { pattern: '/officiate', slug: "Tournament Reporting" },
+  { pattern: '/officiate/:matchCode?', slug: "Tournament Reporting" },
+  { pattern: '/', slug: "Fleet Performance Archive" }, // everything else uses the default slug
 ];
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -43,12 +40,12 @@ function navClass({ isActive }: { isActive: boolean }) {
 
 function AppShell() {
   const location = useLocation();
-  const matchedRoute = LOGO_MAP.find((route) => 
+  const matchedRoute = SLUG_MAP.find((route) => 
     matchPath({ path: route.pattern, end: false }, location.pathname)
   );
 
-  // Use the matched logo, or fallback to the standard one
-  const currentLogo = matchedRoute ? matchedRoute.logo : LOGO_MAP[LOGO_MAP.length - 1].logo;
+  // Use the matched slug, or fallback to the standard one
+  const currentSlug = matchedRoute ? matchedRoute.slug : SLUG_MAP[SLUG_MAP.length - 1].slug;
 
   return (
     <div
@@ -64,8 +61,8 @@ function AppShell() {
       <header className={styles.header}>
         <Link to="/" className={styles.logo}>
           <div>
-            {currentLogo}
-            <p className={styles.subtitle}>Fleet Performance Archive</p>
+            <IWDFLogo width={280} />
+            <p className={styles.subtitle}>{currentSlug}</p>
           </div>
         </Link>
         <nav className={styles.nav} aria-label="Primary">

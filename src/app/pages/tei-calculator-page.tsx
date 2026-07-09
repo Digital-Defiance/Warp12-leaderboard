@@ -829,7 +829,7 @@ export function TeiCalculatorPage() {
             {result.objective === 'points'
               ? ' Lowest cumulative pip total wins.'
               : ' First empty hand wins; others ranked by tiles remaining.'}{' '}
-            Ties share competition rank. Not recorded on leaderboard.warp12.app.
+            Ties share competition rank. Not recorded on iwdf.org.
           </p>
 
           <div className={`${styles.actions} ${styles.noPrint}`}>

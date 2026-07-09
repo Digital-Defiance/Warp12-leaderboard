@@ -1,6 +1,6 @@
 # Warp12 Leaderboard
 
-Public stats, fleet rankings, and published round logs for [Warp12](https://warp12.app). Hosted at **[leaderboard.warp12.app](https://leaderboard.warp12.app)** as a second Firebase Hosting site on the shared **`warp-12`** project (same Firestore and Auth as the bridge app).
+Public stats, fleet rankings, and published round logs for [Warp12](https://warp12.app). Hosted at **[iwdf.org](https://iwdf.org)** as a second Firebase Hosting site on the shared **`warp-12`** project (same Firestore and Auth as the bridge app).
 
 ## Features
 
@@ -29,7 +29,7 @@ Firebase assigns a globally unique site id at creation time. Ours:
 | Deploy target | Site id | Public URL |
 | ------------- | ------- | ---------- |
 | `bridge` | `warp-12` | warp12.app |
-| `leaderboard` | `warp-12-leaderboard` | leaderboard.warp12.app |
+| `leaderboard` | `warp-12-leaderboard` | iwdf.org |
 
 The deploy target name (`leaderboard` in `firebase.json`) is not the site id — see `.firebaserc`.
 
@@ -40,9 +40,9 @@ firebase target:clear hosting leaderboard --project warp-12
 firebase target:apply hosting leaderboard warp-12-leaderboard --project warp-12
 ```
 
-Custom domain **`leaderboard.warp12.app`** is attached to site `warp-12-leaderboard` in Firebase Console → Hosting.
+Custom domain **`iwdf.org`** is attached to site `warp-12-leaderboard` in Firebase Console → Hosting.
 
-Add **`leaderboard.warp12.app`** to Authentication → Settings → **Authorized domains**.
+Add **`iwdf.org`** to Authentication → Settings → **Authorized domains**.
 
 ### Deploy commands
 
