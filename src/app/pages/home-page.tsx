@@ -114,7 +114,7 @@ export const HomePage: FC = () => {
       </section>
 
       <section className={panelStyles.panel}>
-      <h2 className={styles.roadmapTitle}>Open a Channel.</h2>
+      <h2 className={styles.roadmapTitle}>Open a Channel</h2>
       <p>The Federation is actively expanding its roster of verified Captains.
         Whether you play strictly against the ship's computer or you host officiated,
         high-stakes matches at your dining room table, your stats belong in the Archive.</p>

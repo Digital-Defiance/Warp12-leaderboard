@@ -87,7 +87,7 @@ function AppShell() {
           <NavLink to="/profile" className={navClass}>
             Profile
           </NavLink>
-          <a href={BRIDGE_URL} className={styles.navLink}>
+          <a href={BRIDGE_URL} target='_blank' rel='noopener noreferrer' className={styles.navLink}>
             Play
           </a>
         </nav>
