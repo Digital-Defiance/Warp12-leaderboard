@@ -119,7 +119,7 @@ function AppShell() {
 
       <footer className={styles.footer}>
         <a href={BRIDGE_URL} className={styles.footerLink}>
-          Return to the bridge
+          Return to the bridge at Warp 12
         </a>
       </footer>
     </div>

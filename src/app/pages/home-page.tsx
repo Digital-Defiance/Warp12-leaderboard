@@ -2,12 +2,37 @@ import { Link } from 'react-router-dom';
 
 import panelStyles from '../components/panel.module.scss';
 import styles from './home-page.module.scss';
+import type { FC } from 'react';
 
 const BRIDGE_URL = 'https://warp12.app';
 
-export function HomePage() {
+export const HomePage: FC = () => {
   return (
     <div className={styles.page}>
+      <section className={panelStyles.panel}>
+        <h1 className={styles.hColor}>Welcome to the Federation.</h1>
+        <p>For generations, dominoes has been treated as a casual parlor game.
+          <span className={styles.iwdfFederation}>The Interstellar Warp Domino Federation</span>
+          (<span className={`${styles.hColor} ${styles.iwdfFederationWide}`}>IWDF</span>)
+          was founded on a different premise: that the strategic placement of interlocking
+          numerical tiles is a profound tactical discipline. What casual players see as matching
+          pips, a Captain recognizes as vector management and probability control. The board is
+          your bridge. Chart your trail.
+        </p>
+        <h2 className={styles.hColor}>A New Era for the Board</h2>
+        <p>What was once a chaotic parlor game of "trains" has been engineered into Warp Dominoes—a
+          unified tournament discipline. The IWDF sanctions gameplay across multiple scales of
+          engagement. Whether you are running a lightning-fast <span className={styles.hColor}>Warp 9</span>{' '}
+         (Double-Nine) skirmish, competing in the standard <span className={styles.hColor}>
+          <a className={styles.aNoUnderline} href="https://warp12.app" target="_blank" rel="noopener noreferrer">Warp 12</a></span>{' '}
+         (Double-Twelve) ladders, or enduring a massive <span className={styles.hColor}>Warp 15</span>{' '}
+         (Double-Fifteen) campaign, the core challenge remains absolute: optimize your hand, secure your
+         private line, and force your opponents to break their trajectory.
+        </p>
+        <p>The Federation officially endorses Warp factors from 9 to 18 (Double-Nine to Double-Eighteen).
+          Presently we only have an official app for Warp 12.</p>
+      </section>
+
       <section className={panelStyles.panel}>
         <p className={panelStyles.panelEyebrow}>Fleet Command Archive</p>
         <h1 className={panelStyles.panelTitle}>Share stats. Publish match logs.</h1>
@@ -23,7 +48,7 @@ export function HomePage() {
           <span className={styles.cardEyebrow}>Rated play</span>
           <span className={styles.cardTitle}>Officiated matches</span>
           <span className={styles.cardBody}>
-            Check in with a match code, or officiate offline events for human-pool TEI.
+          Authenticate your table. Log round totals, track tile efficiency, and verify your human-pool TEI on the global record.
           </span>
         </Link>
 
@@ -39,7 +64,7 @@ export function HomePage() {
           <span className={styles.cardEyebrow}>Friends</span>
           <span className={styles.cardTitle}>Crew ladders</span>
           <span className={styles.cardBody}>
-            Private charters for your table — scoped group TEI separate from the global standard.
+          Private charters for your table. Scope group TEI separately from the global standard using your own custom directives.
           </span>
         </Link>
 
@@ -55,7 +80,7 @@ export function HomePage() {
           <span className={styles.cardEyebrow}>Offline tool</span>
           <span className={styles.cardTitle}>TEI scorecard calculator</span>
           <span className={styles.cardBody}>
-            Enter round pip totals at the table, compute human-pool TEI, and print a scorecard.
+          No more scrap paper. Enter end-of-round pip totals to instantly calculate penalties, track distributions, and output a Federation scorecard.
           </span>
         </Link>
 
@@ -86,6 +111,16 @@ export function HomePage() {
         <a href={BRIDGE_URL} className={styles.playLink}>
           Play Warp 12 on the bridge
         </a>
+      </section>
+
+      <section className={panelStyles.panel}>
+      <h2 className={styles.roadmapTitle}>Open a Channel.</h2>
+      <p>The Federation is actively expanding its roster of verified Captains.
+        Whether you play strictly against the ship's computer or you host officiated,
+        high-stakes matches at your dining room table, your stats belong in the Archive.</p>
+      <Link to="/profile" className={styles.playLink}>
+        Establish Your Captain Profile
+      </Link>
       </section>
     </div>
   );

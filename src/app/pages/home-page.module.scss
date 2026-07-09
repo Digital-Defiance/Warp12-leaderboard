@@ -10,6 +10,22 @@
   gap: 1rem;
 }
 
+.aNoUnderline {
+  text-decoration: none;
+}
+
+.hColor {
+  color: rgba(56, 189, 248, 1);
+}
+
+.iwdfFederation {
+  font-family: var(--font-federation);
+}
+
+.iwdfFederationWide {
+  font-family: var(--font-federation-wide);
+}
+
 .card {
   display: flex;
   flex-direction: column;
