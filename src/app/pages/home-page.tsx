@@ -11,7 +11,7 @@ export const HomePage: FC = () => {
     <div className={styles.page}>
       <section className={panelStyles.panel}>
         <h1 className={styles.hColor}>Welcome to the Federation.</h1>
-        <p>For generations, dominoes has been treated as a casual parlor game.
+        <p>For generations, dominoes has been treated as a casual parlor game.{' '}
           <span className={styles.iwdfFederation}>The Interstellar Warp Domino Federation</span>{' '}
           (<span className={`${styles.hColor} ${styles.iwdfFederationWide}`}>IWDF</span>)
           was founded on a different premise: that the strategic placement of interlocking
@@ -103,7 +103,7 @@ export const HomePage: FC = () => {
       </div>
 
       <section className={styles.roadmap}>
-        <h2 className={styles.roadmapTitle}>Coming from the bridge</h2>
+        <h2 className={styles.roadmapTitle}>Coming soon from the bridge</h2>
         <ul className={styles.roadmapList}>
           <li>Publish round logs directly from the in-game log viewer</li>
           <li>Sync achievements with Apple Game Center and Google Play Games</li>
