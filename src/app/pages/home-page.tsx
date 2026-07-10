@@ -12,7 +12,7 @@ export const HomePage: FC = () => {
       <section className={panelStyles.panel}>
         <h1 className={styles.hColor}>Welcome to the Federation.</h1>
         <p>For generations, dominoes has been treated as a casual parlor game.
-          <span className={styles.iwdfFederation}>The Interstellar Warp Domino Federation</span>
+          <span className={styles.iwdfFederation}>The Interstellar Warp Domino Federation</span>{' '}
           (<span className={`${styles.hColor} ${styles.iwdfFederationWide}`}>IWDF</span>)
           was founded on a different premise: that the strategic placement of interlocking
           numerical tiles is a profound tactical discipline. What casual players see as matching
