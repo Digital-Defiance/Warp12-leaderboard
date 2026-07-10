@@ -364,10 +364,10 @@ export async function seedDemoStatsIfEmpty(): Promise<boolean> {
 
   const now = new Date().toISOString();
   const demoCaptains = [
-    { uid: 'demo-picard', displayName: 'Picard', matchesWon: 12, matchesCompleted: 18, roundsWon: 34, roundsPlayed: 52 },
-    { uid: 'demo-riker', displayName: 'Riker', matchesWon: 10, matchesCompleted: 16, roundsWon: 29, roundsPlayed: 48 },
-    { uid: 'demo-troi', displayName: 'Troi', matchesWon: 8, matchesCompleted: 14, roundsWon: 22, roundsPlayed: 41 },
-    { uid: 'demo-data', displayName: 'Data', matchesWon: 7, matchesCompleted: 11, roundsWon: 19, roundsPlayed: 36 },
+    { uid: 'demo-armstrong', displayName: 'Armstrong', matchesWon: 12, matchesCompleted: 18, roundsWon: 34, roundsPlayed: 52 },
+    { uid: 'demo-lovell', displayName: 'Lovell', matchesWon: 10, matchesCompleted: 16, roundsWon: 29, roundsPlayed: 48 },
+    { uid: 'demo-earhart', displayName: 'Earhart', matchesWon: 8, matchesCompleted: 14, roundsWon: 22, roundsPlayed: 41 },
+    { uid: 'demo-yeager', displayName: 'Yeager', matchesWon: 7, matchesCompleted: 11, roundsWon: 19, roundsPlayed: 36 },
   ];
 
   await Promise.all(

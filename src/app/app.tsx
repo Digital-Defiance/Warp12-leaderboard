@@ -18,9 +18,10 @@ import { CrewsPage } from './pages/crews-page';
 import { CrewDetailPage } from './pages/crew-detail-page';
 import { CrewJoinPage } from './pages/crew-join-page';
 import styles from './app.module.scss';
-import { IWDFLogo } from './IWDFLogo.js';
+import { IWDFLogo } from './IWDFLogo';
+import { Warp12 } from './pages/warp12';
 
-const BRIDGE_URL = 'https://warp12.app';
+const BRIDGE_URL = 'https://warp.iwdf.org';
 
 const SLUG_MAP: { pattern: string; slug: string }[] = [
   { pattern: '/admin', slug: "Admin" },
@@ -31,6 +32,7 @@ const SLUG_MAP: { pattern: string; slug: string }[] = [
   { pattern: '/matches/:matchCode?', slug: "Tournament Reporting" },
   { pattern: '/officiate', slug: "Tournament Reporting" },
   { pattern: '/officiate/:matchCode?', slug: "Tournament Reporting" },
+  { pattern: '/warp-factor', slug: "Official Position" },
   { pattern: '/', slug: "Fleet Performance Archive" }, // everything else uses the default slug
 ];
 
@@ -113,13 +115,14 @@ function AppShell() {
             <Route path="/logs/:shareSlug" element={<MatchLogDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:uid" element={<ProfilePage />} />
+            <Route path="/warp-factor" element={<Warp12 />} />
           </Routes>
         </div>
       </main>
 
       <footer className={styles.footer}>
         <a href={BRIDGE_URL} className={styles.footerLink}>
-          Return to the bridge at Warp 12
+          Return to the bridge
         </a>
       </footer>
     </div>

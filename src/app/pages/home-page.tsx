@@ -4,7 +4,7 @@ import panelStyles from '../components/panel.module.scss';
 import styles from './home-page.module.scss';
 import type { FC } from 'react';
 
-const BRIDGE_URL = 'https://warp12.app';
+const BRIDGE_URL = 'https://warp.iwdf.org';
 
 export const HomePage: FC = () => {
   return (
@@ -22,15 +22,16 @@ export const HomePage: FC = () => {
         <h2 className={styles.hColor}>A New Era for the Board</h2>
         <p>What was once a chaotic parlor game of "trains" has been engineered into Warp Dominoes—a
           unified tournament discipline. The IWDF sanctions gameplay across multiple scales of
-          engagement. Whether you are running a lightning-fast <span className={styles.hColor}>Warp 9</span>{' '}
+          engagement. Whether you are running a lightning-fast <span className={styles.hColor}><a className={styles.aNoUnderline} href="https://warp.iwdf.org/factor?factor=9" target="_blank" rel="noopener noreferrer">Warp 9</a></span>{' '}
          (Double-Nine) skirmish, competing in the standard <span className={styles.hColor}>
-          <a className={styles.aNoUnderline} href="https://warp12.app" target="_blank" rel="noopener noreferrer">Warp 12</a></span>{' '}
-         (Double-Twelve) ladders, or enduring a massive <span className={styles.hColor}>Warp 15</span>{' '}
+          <a className={styles.aNoUnderline} href="https://warp.iwdf.org/factor?factor=12" target="_blank" rel="noopener noreferrer">Warp 12</a></span>{' '}
+         (Double-Twelve) ladders, or enduring a massive <span className={styles.hColor}><a className={styles.aNoUnderline} href="https://warp.iwdf.org/factor?factor=15" target="_blank" rel="noopener noreferrer">Warp 15</a></span>{' '}
          (Double-Fifteen) campaign, the core challenge remains absolute: optimize your hand, secure your
          private line, and force your opponents to break their trajectory.
         </p>
-        <p>The Federation officially endorses Warp factors from 9 to 18 (Double-Nine to Double-Eighteen).
-          Presently we only have an official app for Warp 12.</p>
+        <p>The Federation officially endorses Warp factors from <a className={styles.aNoUnderline} href="https://warp.iwdf.org/factor?factor=9" target="_blank" rel="noopener noreferrer">9</a> to <a className={styles.aNoUnderline} href="https://warp.iwdf.org/factor?factor=18" target="_blank" rel="noopener noreferrer">18</a> (Double-Nine to Double-Eighteen), but{' '}
+          <Link to="/warp-factor">only Warp 12 is rated for official matches</Link>.
+        </p>
       </section>
 
       <section className={panelStyles.panel}>

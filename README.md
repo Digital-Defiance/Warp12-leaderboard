@@ -1,6 +1,6 @@
 # Warp12 Leaderboard
 
-Public stats, fleet rankings, and published round logs for [Warp12](https://warp12.app). Hosted at **[iwdf.org](https://iwdf.org)** as a second Firebase Hosting site on the shared **`warp-12`** project (same Firestore and Auth as the bridge app).
+Public stats, fleet rankings, and published round logs for [Warp](https://warp.iwdf.org). Hosted at **[iwdf.org](https://iwdf.org)** as a second Firebase Hosting site on the shared **`warp-12`** project (same Firestore and Auth as the bridge app).
 
 ## Features
 
@@ -28,7 +28,7 @@ Firebase assigns a globally unique site id at creation time. Ours:
 
 | Deploy target | Site id | Public URL |
 | ------------- | ------- | ---------- |
-| `bridge` | `warp-12` | warp12.app |
+| `bridge` | `warp-12` | warp.iwdf.org |
 | `leaderboard` | `warp-12-leaderboard` | iwdf.org |
 
 The deploy target name (`leaderboard` in `firebase.json`) is not the site id — see `.firebaserc`.

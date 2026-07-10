@@ -7,14 +7,14 @@ describe('stripUndefined', () => {
     expect(
       stripUndefined({
         bio: undefined,
-        displayName: 'Picard',
+        displayName: 'Armstrong',
         gamingIds: {
           appleGameCenter: undefined,
           xboxLive: 'player1',
         },
       })
     ).toEqual({
-      displayName: 'Picard',
+      displayName: 'Armstrong',
       gamingIds: {
         xboxLive: 'player1',
       },
