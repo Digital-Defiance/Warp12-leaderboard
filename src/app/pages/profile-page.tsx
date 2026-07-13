@@ -20,8 +20,11 @@ import type {
 } from '../../firebase/schema.js';
 import {
   assistedMatchStats,
+  displayGroupObjectiveRating,
   displayGroupObjectiveTei,
+  displayHumanObjectiveRating,
   displayHumanObjectiveTei,
+  displayObjectiveRating,
   displayObjectiveTei,
   groupObjectiveTeiStats,
   normalizeLocalAiStats,
@@ -39,8 +42,8 @@ interface CrewTeiRow {
   charterId: string;
   name: string;
   slug: string;
-  goOutTei: number | null;
-  pointsTei: number | null;
+  goOutTei: number | string | null;
+  pointsTei: number | string | null;
   goOutMatches: number;
   pointsMatches: number;
 }
@@ -136,8 +139,10 @@ export function ProfilePage() {
               charterId,
               name: meta?.name ?? charterId,
               slug: meta?.slug ?? charterId,
-              goOutTei: displayGroupObjectiveTei(loadedStats, charterId, 'go-out'),
-              pointsTei: displayGroupObjectiveTei(loadedStats, charterId, 'points'),
+              goOutTei: displayGroupObjectiveRating(loadedStats, charterId, 'go-out') ?? 
+                        displayGroupObjectiveTei(loadedStats, charterId, 'go-out'),
+              pointsTei: displayGroupObjectiveRating(loadedStats, charterId, 'points') ??
+                         displayGroupObjectiveTei(loadedStats, charterId, 'points'),
               goOutMatches: goOut.unassistedMatches,
               pointsMatches: points.unassistedMatches,
             });
@@ -251,13 +256,15 @@ export function ProfilePage() {
           <article className={statCardStyles.card}>
             <p className={statCardStyles.label}>Global go-out TEI</p>
             <p className={statCardStyles.value}>
-              {displayHumanObjectiveTei(visibleStats, 'go-out') ?? '—'}
+              {displayHumanObjectiveRating(visibleStats, 'go-out') ?? 
+               displayHumanObjectiveTei(visibleStats, 'go-out') ?? '—'}
             </p>
           </article>
           <article className={statCardStyles.card}>
             <p className={statCardStyles.label}>Global points TEI</p>
             <p className={statCardStyles.value}>
-              {displayHumanObjectiveTei(visibleStats, 'points') ?? '—'}
+              {displayHumanObjectiveRating(visibleStats, 'points') ??
+               displayHumanObjectiveTei(visibleStats, 'points') ?? '—'}
             </p>
           </article>
         </div>
@@ -302,7 +309,7 @@ export function ProfilePage() {
       <section className={styles.localAiSection}>
         <h2 className={styles.localAiTitle}>Practice vs AI</h2>
         <p className={styles.localAiLead}>
-          Matches bucketed by the highest AI tactical class at your table. Go-out and
+          Matches bucketed by the highest AI commission track at your table. Go-out and
           points each have their own solo TEI track — updated only on server-verified
           unassisted wins and losses.
         </p>
@@ -325,8 +332,8 @@ export function ProfilePage() {
                 const bucket = localAi[skill];
                 const solo = unassistedMatchStats(bucket);
                 const assisted = assistedMatchStats(bucket);
-                const goOutTei = displayObjectiveTei(bucket, 'go-out');
-                const pointsTei = displayObjectiveTei(bucket, 'points');
+                const goOutRating = displayObjectiveRating(bucket, 'go-out') ?? displayObjectiveTei(bucket, 'go-out');
+                const pointsRating = displayObjectiveRating(bucket, 'points') ?? displayObjectiveTei(bucket, 'points');
                 return (
                   <tr key={skill}>
                     <td>{LOCAL_AI_LABELS[skill]}</td>
@@ -339,7 +346,7 @@ export function ProfilePage() {
                         : '—'}
                     </td>
                     <td>
-                      {goOutTei ?? '—'}
+                      {goOutRating ?? '—'}
                       {objectiveWinRate(bucket, 'go-out') !== null && (
                         <span className={styles.objectiveSub}>
                           {' '}
@@ -348,7 +355,7 @@ export function ProfilePage() {
                       )}
                     </td>
                     <td>
-                      {pointsTei ?? '—'}
+                      {pointsRating ?? '—'}
                       {objectiveWinRate(bucket, 'points') !== null && (
                         <span className={styles.objectiveSub}>
                           {' '}

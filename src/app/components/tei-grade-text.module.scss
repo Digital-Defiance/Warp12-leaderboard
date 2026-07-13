@@ -1,0 +1,26 @@
+.teiGrade {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+// WCAG AA compliant colors (minimum 4.5:1 contrast ratio on dark backgrounds)
+.grade-e {
+  color: #ffeb3b; /* Bright Gold - Elite (accessible) */
+}
+
+.grade-v {
+  color: #64b5f6; /* Light Blue - Veteran (accessible) */
+}
+
+.grade-c {
+  color: #66bb6a; /* Light Green - Consistent (accessible) */
+}
+
+.grade-i {
+  color: #ffb74d; /* Light Orange - Improving (accessible) */
+}
+
+.grade-p {
+  color: #bdbdbd; /* Light Gray - Provisional (accessible) */
+}

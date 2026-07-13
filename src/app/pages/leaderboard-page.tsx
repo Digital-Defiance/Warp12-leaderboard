@@ -9,6 +9,7 @@ import {
   type BoardKind,
 } from '../../lib/leaderboard-boards.js';
 import panelStyles from '../components/panel.module.scss';
+import { TeiGradeText } from '../components/tei-grade-text.js';
 import {
   fetchLeaderboard,
   fetchGroupTeiLeaderboard,
@@ -41,6 +42,18 @@ export function LeaderboardPage() {
   const [board, setBoard] = useState<BoardKind>('global-official');
   const [objective, setObjective] = useState<RatedObjective>('points');
   const [fleetSize, setFleetSize] = useState<number>(4);
+  const [hideProvisional, setHideProvisional] = useState(false);
+  const [gradeFilter, setGradeFilter] = useState<string>('all');
+  
+  // Load advanced view preference from localStorage
+  const [advancedView, setAdvancedView] = useState(() => {
+    try {
+      const stored = localStorage.getItem('warp12-leaderboard-advanced-view');
+      return stored === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [globalOfficialCharter, setGlobalOfficialCharter] =
     useState<PublicCharterView | null>(null);
   const [fleetEntries, setFleetEntries] = useState<LeaderboardEntry[]>([]);
@@ -61,6 +74,16 @@ export function LeaderboardPage() {
   const globalOfficialSupported = GLOBAL_OFFICIAL_PLAYER_COUNTS.includes(
     fleetSize as (typeof GLOBAL_OFFICIAL_PLAYER_COUNTS)[number]
   );
+
+  // Persist advanced view preference to localStorage
+  const toggleAdvancedView = (enabled: boolean) => {
+    setAdvancedView(enabled);
+    try {
+      localStorage.setItem('warp12-leaderboard-advanced-view', String(enabled));
+    } catch {
+      // ignore quota / private mode
+    }
+  };
 
   useEffect(() => {
     if (!configured || board !== 'global-official') {
@@ -146,6 +169,7 @@ export function LeaderboardPage() {
         : board === 'human'
           ? humanEntries
           : localEntries;
+
   const isLocalBoard = board !== 'fleet' && board !== 'human' && board !== 'global-official';
   const isHumanBoard = board === 'human';
   const isGlobalOfficialBoard = board === 'global-official';
@@ -154,6 +178,30 @@ export function LeaderboardPage() {
     : isHumanBoard
       ? 'Human-pool TEI'
       : 'Solo TEI';
+
+  // Apply filters to entries with TEI grades
+  const filteredEntries = entries.filter((entry) => {
+    if (board === 'fleet') return true; // Fleet board doesn't have TEI grades
+
+    const teiEntry = entry as HumanPoolLeaderboardEntry | LocalAiLeaderboardEntry;
+    const grade = teiEntry.unassistedTei;
+
+    // Hide provisional filter (P grade)
+    if (hideProvisional && typeof grade === 'string' && grade.startsWith('P')) {
+      return false;
+    }
+
+    // Grade filter
+    if (gradeFilter !== 'all' && typeof grade === 'string') {
+      const entryGrade = grade.charAt(0);
+      if (gradeFilter === 'elite' && entryGrade !== 'E') return false;
+      if (gradeFilter === 'veteran' && entryGrade !== 'V') return false;
+      if (gradeFilter === 'consistent' && entryGrade !== 'C') return false;
+      if (gradeFilter === 'ev' && entryGrade !== 'E' && entryGrade !== 'V') return false;
+    }
+
+    return true;
+  });
 
   return (
     <div className={styles.page}>
@@ -295,6 +343,40 @@ export function LeaderboardPage() {
         </p>
       )}
 
+      {!loading && !error && entries.length > 0 && board !== 'fleet' && (
+        <div className={styles.filters}>
+          <label className={styles.filterCheckbox}>
+            <input
+              type="checkbox"
+              checked={hideProvisional}
+              onChange={(e) => setHideProvisional(e.target.checked)}
+            />
+            <span>Hide provisional (P grade)</span>
+          </label>
+          <label className={styles.filterSelect}>
+            <span>Grade filter:</span>
+            <select
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+            >
+              <option value="all">All grades</option>
+              <option value="elite">Elite (E) only</option>
+              <option value="veteran">Veteran (V) only</option>
+              <option value="consistent">Consistent (C) only</option>
+              <option value="ev">E + V only</option>
+            </select>
+          </label>
+          <label className={styles.filterCheckbox}>
+            <input
+              type="checkbox"
+              checked={advancedView}
+              onChange={(e) => toggleAdvancedView(e.target.checked)}
+            />
+            <span>Advanced view (show μ, σ, ordinal rating)</span>
+          </label>
+        </div>
+      )}
+
       {fleetEntries.length > 0 && board === 'fleet' && (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -326,8 +408,8 @@ export function LeaderboardPage() {
         </div>
       )}
 
-      {(humanEntries.length > 0 && board === 'human') ||
-      (globalOfficialEntries.length > 0 && board === 'global-official') ? (
+      {(filteredEntries.length > 0 && board === 'human') ||
+      (filteredEntries.length > 0 && board === 'global-official') ? (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -335,6 +417,9 @@ export function LeaderboardPage() {
                 <th>Rank</th>
                 <th>Captain</th>
                 <th>{teiColumnLabel}</th>
+                {advancedView && <th title="Skill estimate (μ) — The system's best guess at your true skill level. Higher is better.">μ</th>}
+                {advancedView && <th title="Uncertainty (σ) — How confident the system is in your rating. Lower is better (more data).">σ</th>}
+                {advancedView && <th title="Ordinal rating (μ - 3σ) — Conservative skill estimate used for matchmaking and sorting.">Ordinal</th>}
                 <th>Percentile</th>
                 <th>Wins</th>
                 <th>Rated matches</th>
@@ -342,7 +427,7 @@ export function LeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(isGlobalOfficialBoard ? globalOfficialEntries : humanEntries).map(
+              {(filteredEntries as HumanPoolLeaderboardEntry[]).map(
                 (entry) => (
                   <tr key={entry.uid}>
                     <td>{entry.rank}</td>
@@ -351,7 +436,10 @@ export function LeaderboardPage() {
                         {entry.displayName}
                       </Link>
                     </td>
-                    <td>{entry.unassistedTei ?? '—'}</td>
+                    <td><TeiGradeText grade={entry.unassistedTei} /></td>
+                    {advancedView && <td>{entry.mu?.toFixed(2) ?? '—'}</td>}
+                    {advancedView && <td>{entry.sigma?.toFixed(2) ?? '—'}</td>}
+                    {advancedView && <td>{entry.ordinalRating?.toFixed(1) ?? '—'}</td>}
                     <td>{entry.unassistedPercentile}</td>
                     <td>{entry.unassistedWins}</td>
                     <td>{entry.unassistedMatches}</td>
@@ -372,6 +460,9 @@ export function LeaderboardPage() {
                 <th>Rank</th>
                 <th>Captain</th>
                 <th>{teiColumnLabel}</th>
+                {advancedView && <th title="Skill estimate (μ) — The system's best guess at your true skill level. Higher is better.">μ</th>}
+                {advancedView && <th title="Uncertainty (σ) — How confident the system is in your rating. Lower is better (more data).">σ</th>}
+                {advancedView && <th title="Ordinal rating (μ - 3σ) — Conservative skill estimate used for matchmaking and sorting.">Ordinal</th>}
                 <th>Percentile</th>
                 <th>Solo wins</th>
                 <th>Verified matches</th>
@@ -379,7 +470,7 @@ export function LeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              {localEntries.map((entry) => (
+              {(filteredEntries as LocalAiLeaderboardEntry[]).map((entry) => (
                 <tr key={entry.uid}>
                   <td>{entry.rank}</td>
                   <td>
@@ -387,7 +478,10 @@ export function LeaderboardPage() {
                       {entry.displayName}
                     </Link>
                   </td>
-                  <td>{entry.unassistedTei ?? '—'}</td>
+                  <td><TeiGradeText grade={entry.unassistedTei} /></td>
+                  {advancedView && <td>{entry.mu?.toFixed(2) ?? '—'}</td>}
+                  {advancedView && <td>{entry.sigma?.toFixed(2) ?? '—'}</td>}
+                  {advancedView && <td>{entry.ordinalRating?.toFixed(1) ?? '—'}</td>}
                   <td>{entry.unassistedPercentile}</td>
                   <td>{entry.unassistedWins}</td>
                   <td>{entry.unassistedMatches}</td>

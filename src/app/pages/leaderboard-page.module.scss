@@ -111,3 +111,61 @@
     color: #7dd3fc;
   }
 }
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid var(--warp-panel-border, #334155);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  font-size: 0.8rem;
+}
+
+.filterCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+  }
+
+  span {
+    color: var(--warp-text, #e2e8f0);
+  }
+}
+
+.filterSelect {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  span {
+    color: var(--warp-text-muted, #94a3b8);
+  }
+
+  select {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--warp-panel-border, #334155);
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--warp-text, #e2e8f0);
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+  }
+}

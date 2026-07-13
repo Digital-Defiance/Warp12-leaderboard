@@ -1,21 +1,41 @@
-/** Human-pool TEI → Tactical Class (TEI spec §7.2). */
+/** Display TEI (0-99) → federation commission (coarse bands for leaderboard). */
 export type HumanTacticalClass = 'I' | 'II' | 'III' | 'IV';
 
-const TAGLINES: Record<HumanTacticalClass, string> = {
-  IV: 'Provisional / New Profile',
-  III: 'Competent / Standard',
-  II: 'Veteran / Sharp',
-  I: 'Elite / Master',
+const LABELS: Record<
+  HumanTacticalClass,
+  { readonly short: string; readonly long: string; readonly tagline: string }
+> = {
+  IV: {
+    short: 'Ens.',
+    long: 'Ensign',
+    tagline: 'Provisional / New Profile',
+  },
+  III: {
+    short: 'Lt.',
+    long: 'Lieutenant',
+    tagline: 'Competent / Standard',
+  },
+  II: {
+    short: 'Cmdr.',
+    long: 'Commander',
+    tagline: 'Veteran / Sharp',
+  },
+  I: {
+    short: 'Flag',
+    long: 'Flag Officer',
+    tagline: 'Elite / Master',
+  },
 };
 
-export function teiToHumanTacticalClass(tei: number): HumanTacticalClass {
-  if (tei < 1100) {
+export function teiToHumanTacticalClass(displayTei: number): HumanTacticalClass {
+  // Display TEI is 0-99 (μ - 3σ normalized)
+  if (displayTei < 15) {
     return 'IV';
   }
-  if (tei < 1350) {
+  if (displayTei < 25) {
     return 'III';
   }
-  if (tei < 1450) {
+  if (displayTei < 35) {
     return 'II';
   }
   return 'I';
@@ -26,9 +46,10 @@ export function formatHumanTacticalClass(
   options?: { short?: boolean }
 ): string {
   const cls = teiToHumanTacticalClass(tei);
-  return options?.short ? `Cls ${cls}` : `Class ${cls}`;
+  const labels = LABELS[cls];
+  return options?.short ? labels.short : labels.long;
 }
 
 export function humanTacticalClassTagline(tei: number): string {
-  return TAGLINES[teiToHumanTacticalClass(tei)];
+  return LABELS[teiToHumanTacticalClass(tei)].tagline;
 }

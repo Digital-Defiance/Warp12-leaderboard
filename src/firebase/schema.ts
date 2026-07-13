@@ -19,8 +19,8 @@ export interface ObjectiveTeiStats {
 export interface LocalAiSkillStats extends MatchOutcomeStats {
   advisorMatches: number;
   advisorWins: number;
-  goOut?: ObjectiveTeiStats;
-  points?: ObjectiveTeiStats;
+  goOut?: ObjectiveRatingStats;
+  points?: ObjectiveRatingStats;
 }
 
 export type LocalAiStats = Record<AiSkillLevel, LocalAiSkillStats>;
@@ -97,7 +97,7 @@ export function matchWinRate(stats: MatchOutcomeStats): number {
   return stats.matchesWon / stats.matchesCompleted;
 }
 
-export const DEFAULT_UNASSISTED_TEI = 1000;
+export const DEFAULT_UNASSISTED_TEI = 0; // Display rating for new players (P grade)
 
 export function displayUnassistedTei(
   tei: number | undefined,
@@ -115,6 +115,74 @@ export function displayObjectiveTei(
 ): number | null {
   const bucket = objectiveTeiStats(stats, objective);
   return displayUnassistedTei(bucket.unassistedTei, bucket.unassistedMatches);
+}
+
+// New OpenSkill display functions
+export function displayObjectiveRating(
+  stats: LocalAiSkillStats,
+  objective: RatedObjective
+): string | null {
+  const key = objectiveTeiKey(objective);
+  const bucket = stats[key];
+  if (!bucket?.rating || bucket.rating.matches === 0) {
+    return null;
+  }
+  return bucket.rating.displayGrade;
+}
+
+export function humanObjectiveRatingStats(
+  stats: PlayerStatsDocument,
+  objective: RatedObjective
+): ObjectiveRatingStats {
+  const key = objectiveTeiKey(objective);
+  return { unassistedMatches: 0, unassistedWins: 0, ...stats.humanRating?.[key] };
+}
+
+export function displayHumanObjectiveRating(
+  stats: PlayerStatsDocument,
+  objective: RatedObjective
+): string | null {
+  const bucket = humanObjectiveRatingStats(stats, objective);
+  if (!bucket.rating || bucket.rating.matches === 0) {
+    return null;
+  }
+  return bucket.rating.displayGrade;
+}
+
+export function groupObjectiveRatingStats(
+  stats: PlayerStatsDocument | null | undefined,
+  charterId: string,
+  objective: RatedObjective,
+  charterSeasonKey?: string
+): ObjectiveRatingStats {
+  const key = objectiveTeiKey(objective);
+  const bucket = stats?.groupRating?.[charterId];
+  const activeBucket =
+    bucket &&
+    charterSeasonKey &&
+    bucket.seasonKey &&
+    bucket.seasonKey !== charterSeasonKey
+      ? undefined
+      : bucket;
+  return { unassistedMatches: 0, unassistedWins: 0, ...activeBucket?.[key] };
+}
+
+export function displayGroupObjectiveRating(
+  stats: PlayerStatsDocument,
+  charterId: string,
+  objective: RatedObjective,
+  charterSeasonKey?: string
+): string | null {
+  const bucket = groupObjectiveRatingStats(
+    stats,
+    charterId,
+    objective,
+    charterSeasonKey
+  );
+  if (!bucket.rating || bucket.rating.matches === 0) {
+    return null;
+  }
+  return bucket.rating.displayGrade;
 }
 
 export function objectiveWinRate(
@@ -150,6 +218,29 @@ export interface PlayerProfileDocument {
   updatedAt: string;
 }
 
+export interface StoredRating {
+  mu: number;
+  sigma: number;
+  matches: number;
+  displayRating: number;
+  displayGrade: string;
+}
+
+export interface ObjectiveRatingStats {
+  rating?: StoredRating;
+  unassistedMatches: number;
+  unassistedWins: number;
+  advisorMatches?: number;
+  advisorWins?: number;
+}
+
+export interface HumanRatingStats {
+  goOut?: ObjectiveRatingStats;
+  points?: ObjectiveRatingStats;
+  seasonKey?: string;
+}
+
+// Legacy TEI integer types (deprecated)
 export interface HumanTeiStats {
   goOut?: ObjectiveTeiStats;
   points?: ObjectiveTeiStats;
@@ -164,8 +255,11 @@ export interface PlayerStatsDocument {
   roundsPlayed: number;
   roundsWon: number;
   totalPoints: number;
+  // New OpenSkill fields
+  humanRating?: HumanRatingStats;
+  groupRating?: Record<string, HumanRatingStats>;
+  // Legacy integer TEI fields (deprecated)
   humanTei?: HumanTeiStats;
-  /** Scoped TEI per crew charter (`charterId` → track buckets). */
   groupTei?: Record<string, HumanTeiStats>;
   localAi?: LocalAiStats;
   bestRoundTimeMs?: number;
@@ -227,11 +321,17 @@ export interface HumanPoolLeaderboardEntry {
   uid: string;
   displayName: string;
   objective: RatedObjective;
-  unassistedTei: number | null;
+  unassistedTei: number | string | null; // number = legacy integer TEI, string = OpenSkill grade
   unassistedPercentile: string;
   unassistedMatches: number;
   unassistedWins: number;
   unassistedWinRate: number;
+  /** Advanced view: raw μ (skill estimate) */
+  mu?: number;
+  /** Advanced view: raw σ (uncertainty) */
+  sigma?: number;
+  /** Advanced view: ordinal rating for matchmaking (μ - 3σ) */
+  ordinalRating?: number;
 }
 
 export interface PublishedLogSummary {
@@ -273,13 +373,19 @@ export interface LocalAiLeaderboardEntry {
   uid: string;
   displayName: string;
   objective: RatedObjective;
-  unassistedTei: number | null;
+  unassistedTei: number | string | null; // number = legacy integer TEI, string = OpenSkill grade
   /** Top X% among rated captains on this board (rank / pool size). */
   unassistedPercentile: string;
   unassistedMatches: number;
   unassistedWins: number;
   unassistedWinRate: number;
   skill: AiSkillLevel;
+  /** Advanced view: raw μ (skill estimate) */
+  mu?: number;
+  /** Advanced view: raw σ (uncertainty) */
+  sigma?: number;
+  /** Advanced view: ordinal rating for matchmaking (μ - 3σ) */
+  ordinalRating?: number;
 }
 
 export interface PublishMatchLogInput {

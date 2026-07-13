@@ -17,6 +17,7 @@ import type {
   LeaderboardEntry,
   LocalAiLeaderboardEntry,
   LocalAiSkillStats,
+  ObjectiveRatingStats,
   PlayerProfileDocument,
   PlayerStatsDocument,
   PublishedLogDocument,
@@ -26,12 +27,17 @@ import {
   displayGroupObjectiveTei,
   displayHumanObjectiveTei,
   displayObjectiveTei,
+  displayObjectiveRating,
+  displayHumanObjectiveRating,
+  displayGroupObjectiveRating,
   normalizeLocalAiStats,
   humanObjectiveTeiStats,
+  humanObjectiveRatingStats,
   groupObjectiveTeiStats,
+  groupObjectiveRatingStats,
   objectiveTeiStats,
 } from './schema.js';
-import { formatTopPercentile } from './stats-elo.js';
+import { formatTopPercentile } from './stats-openskill.js';
 import { stripUndefined } from './strip-undefined.js';
 import {
   verifiedFleetTotals,
@@ -103,19 +109,32 @@ export async function fetchLocalAiLeaderboard(
     .map((stats) => {
       const bucket = localSkillStats(stats, skill);
       const rated = objectiveTeiStats(bucket, objective);
+      // Try new OpenSkill rating first, fall back to legacy TEI integer
+      const ratingDisplay = displayObjectiveRating(bucket, objective) ?? displayObjectiveTei(bucket, objective);
       return {
         stats,
         rated,
-        unassistedTei: displayObjectiveTei(bucket, objective),
+        unassistedTei: ratingDisplay,
       };
     })
     .filter(({ rated }) => rated.unassistedMatches > 0)
     .sort((left, right) => {
-      const leftTei = left.unassistedTei ?? 0;
-      const rightTei = right.unassistedTei ?? 0;
-      if (rightTei !== leftTei) {
-        return rightTei - leftTei;
+      // Sort by display rating (grade or number)
+      const leftVal = left.unassistedTei ?? '';
+      const rightVal = right.unassistedTei ?? '';
+      
+      // If both are strings (grades), sort alphabetically then by wins
+      if (typeof leftVal === 'string' && typeof rightVal === 'string') {
+        if (rightVal !== leftVal) {
+          return rightVal.localeCompare(leftVal); // Reverse: E > V > C > I > P
+        }
+      } else if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+        // Legacy TEI integer: sort by number
+        if (rightVal !== leftVal) {
+          return rightVal - leftVal;
+        }
       }
+      
       if (right.rated.unassistedWins !== left.rated.unassistedWins) {
         return right.rated.unassistedWins - left.rated.unassistedWins;
       }
@@ -139,6 +158,10 @@ export async function fetchLocalAiLeaderboard(
           ? rated.unassistedWins / rated.unassistedMatches
           : 0,
       skill,
+      // Advanced view fields - only available if using ObjectiveRatingStats with rating
+      mu: 'rating' in rated ? (rated as ObjectiveRatingStats).rating?.mu : undefined,
+      sigma: 'rating' in rated ? (rated as ObjectiveRatingStats).rating?.sigma : undefined,
+      ordinalRating: ('rating' in rated && (rated as ObjectiveRatingStats).rating) ? ((rated as ObjectiveRatingStats).rating!.mu - 3 * (rated as ObjectiveRatingStats).rating!.sigma) : undefined,
     }));
 }
 
@@ -151,20 +174,40 @@ export async function fetchHumanPoolLeaderboard(
   return snapshot.docs
     .map((entry) => entry.data() as PlayerStatsDocument)
     .map((stats) => {
-      const rated = humanObjectiveTeiStats(stats, objective);
+      // Try new OpenSkill rating first
+      const ratedNew = humanObjectiveRatingStats(stats, objective);
+      const ratingDisplay = displayHumanObjectiveRating(stats, objective);
+      
+      // Fall back to legacy TEI integer if no OpenSkill data
+      const ratedLegacy = humanObjectiveTeiStats(stats, objective);
+      const legacyDisplay = displayHumanObjectiveTei(stats, objective);
+      
+      const rated = ratedNew.rating ? ratedNew : ratedLegacy;
+      const unassistedTei = ratingDisplay ?? legacyDisplay;
+      
       return {
         stats,
         rated,
-        unassistedTei: displayHumanObjectiveTei(stats, objective),
+        unassistedTei,
       };
     })
     .filter(({ rated }) => rated.unassistedMatches > 0)
     .sort((left, right) => {
-      const leftTei = left.unassistedTei ?? 0;
-      const rightTei = right.unassistedTei ?? 0;
-      if (rightTei !== leftTei) {
-        return rightTei - leftTei;
+      const leftVal = left.unassistedTei ?? '';
+      const rightVal = right.unassistedTei ?? '';
+      
+      // Grade sorting (string)
+      if (typeof leftVal === 'string' && typeof rightVal === 'string') {
+        if (rightVal !== leftVal) {
+          return rightVal.localeCompare(leftVal);
+        }
+      } else if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+        // Legacy TEI integer sorting (number)
+        if (rightVal !== leftVal) {
+          return rightVal - leftVal;
+        }
       }
+      
       if (right.rated.unassistedWins !== left.rated.unassistedWins) {
         return right.rated.unassistedWins - left.rated.unassistedWins;
       }
@@ -184,6 +227,10 @@ export async function fetchHumanPoolLeaderboard(
         rated.unassistedMatches > 0
           ? rated.unassistedWins / rated.unassistedMatches
           : 0,
+      // Advanced view fields - only available if using ObjectiveRatingStats
+      mu: 'rating' in rated ? rated.rating?.mu : undefined,
+      sigma: 'rating' in rated ? rated.rating?.sigma : undefined,
+      ordinalRating: ('rating' in rated && rated.rating) ? rated.rating.mu - 3 * rated.rating.sigma : undefined,
     }));
 }
 
@@ -198,30 +245,60 @@ export async function fetchGroupTeiLeaderboard(
   return snapshot.docs
     .map((entry) => entry.data() as PlayerStatsDocument)
     .map((stats) => {
-      const rated = groupObjectiveTeiStats(
+      // Try new OpenSkill rating first
+      const ratedNew = groupObjectiveRatingStats(
         stats,
         charterId,
         objective,
         charterSeasonKey
       );
+      const ratingDisplay = displayGroupObjectiveRating(
+        stats,
+        charterId,
+        objective,
+        charterSeasonKey
+      );
+      
+      // Fall back to legacy TEI integer
+      const ratedLegacy = groupObjectiveTeiStats(
+        stats,
+        charterId,
+        objective,
+        charterSeasonKey
+      );
+      const legacyDisplay = displayGroupObjectiveTei(
+        stats,
+        charterId,
+        objective,
+        charterSeasonKey
+      );
+      
+      const rated = ratedNew.rating ? ratedNew : ratedLegacy;
+      const unassistedTei = ratingDisplay ?? legacyDisplay;
+      
       return {
         stats,
         rated,
-        unassistedTei: displayGroupObjectiveTei(
-          stats,
-          charterId,
-          objective,
-          charterSeasonKey
-        ),
+        unassistedTei,
       };
     })
     .filter(({ rated }) => rated.unassistedMatches > 0)
     .sort((left, right) => {
-      const leftTei = left.unassistedTei ?? 0;
-      const rightTei = right.unassistedTei ?? 0;
-      if (rightTei !== leftTei) {
-        return rightTei - leftTei;
+      const leftVal = left.unassistedTei ?? '';
+      const rightVal = right.unassistedTei ?? '';
+      
+      // Grade sorting (string)
+      if (typeof leftVal === 'string' && typeof rightVal === 'string') {
+        if (rightVal !== leftVal) {
+          return rightVal.localeCompare(leftVal);
+        }
+      } else if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+        // Legacy TEI integer sorting (number)
+        if (rightVal !== leftVal) {
+          return rightVal - leftVal;
+        }
       }
+      
       if (right.rated.unassistedWins !== left.rated.unassistedWins) {
         return right.rated.unassistedWins - left.rated.unassistedWins;
       }
@@ -241,6 +318,10 @@ export async function fetchGroupTeiLeaderboard(
         rated.unassistedMatches > 0
           ? rated.unassistedWins / rated.unassistedMatches
           : 0,
+      // Advanced view fields - only available if using ObjectiveRatingStats
+      mu: 'rating' in rated ? rated.rating?.mu : undefined,
+      sigma: 'rating' in rated ? rated.rating?.sigma : undefined,
+      ordinalRating: ('rating' in rated && rated.rating) ? rated.rating.mu - 3 * rated.rating.sigma : undefined,
     }));
 }
 
@@ -389,12 +470,10 @@ export async function seedDemoStatsIfEmpty(): Promise<boolean> {
             goOut: {
               unassistedMatches: 2,
               unassistedWins: 2,
-              unassistedTei: 1048,
             },
             points: {
               unassistedMatches: 1,
               unassistedWins: 0,
-              unassistedTei: 972,
             },
           },
           lieutenant: {
@@ -405,12 +484,10 @@ export async function seedDemoStatsIfEmpty(): Promise<boolean> {
             goOut: {
               unassistedMatches: 3,
               unassistedWins: 2,
-              unassistedTei: 1116,
             },
             points: {
               unassistedMatches: 2,
               unassistedWins: 1,
-              unassistedTei: 1004,
             },
           },
           commander: {
@@ -421,12 +498,10 @@ export async function seedDemoStatsIfEmpty(): Promise<boolean> {
             goOut: {
               unassistedMatches: 1,
               unassistedWins: 0,
-              unassistedTei: 986,
             },
             points: {
               unassistedMatches: 1,
               unassistedWins: 1,
-              unassistedTei: 1012,
             },
           },
         },

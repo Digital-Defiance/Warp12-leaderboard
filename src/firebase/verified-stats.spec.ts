@@ -15,7 +15,7 @@ describe('verifiedFleetTotals', () => {
       roundsWon: 0,
       totalPoints: 0,
       humanTei: {
-        goOut: { unassistedMatches: 2, unassistedWins: 1, unassistedTei: 1010 },
+        goOut: { unassistedMatches: 2, unassistedWins: 1 },
       },
       localAi: {
         ...emptyLocalAiStats(),
@@ -25,7 +25,7 @@ describe('verifiedFleetTotals', () => {
           matchesWon: 3,
           advisorMatches: 1,
           advisorWins: 1,
-          goOut: { unassistedMatches: 2, unassistedWins: 1, unassistedTei: 1008 },
+          goOut: { unassistedMatches: 2, unassistedWins: 1 },
         },
       },
       updatedAt: '2026-01-01T00:00:00.000Z',
@@ -53,7 +53,7 @@ describe('verifiedFleetTotals', () => {
           ...emptyLocalAiSkillStats(),
           matchesCompleted: 1,
           matchesWon: 1,
-          goOut: { unassistedMatches: 1, unassistedWins: 1, unassistedTei: 1012 },
+          goOut: { unassistedMatches: 1, unassistedWins: 1 },
         },
       } as PlayerStatsDocument['localAi'],
       updatedAt: '2026-01-01T00:00:00.000Z',

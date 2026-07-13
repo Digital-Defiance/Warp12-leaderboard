@@ -32,14 +32,16 @@ function CheckboxRow({
   disabled,
   onChange,
   children,
+  className,
 }: {
   checked: boolean;
   disabled?: boolean;
   onChange: (checked: boolean) => void;
   children: string;
+  className?: string;
 }) {
   return (
-    <label className={styles.checkboxRow}>
+    <label className={`${styles.checkboxRow} ${className || ''}`}>
       <input
         type="checkbox"
         checked={checked}
@@ -83,18 +85,146 @@ export function CharterSetupFields({
 
       <h3 className={styles.sectionTitle}>Optional directives</h3>
       <CheckboxRow
+        checked={value.modules.continuum ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ continuum: checked })}
+      >
+        Module Alpha — Continuum
+      </CheckboxRow>
+      <CheckboxRow
         checked={value.modules.salamanderPenalty ?? false}
         disabled={disabled}
         onChange={(checked) => setModules({ salamanderPenalty: checked })}
       >
         Module Beta — Salamander penalty
       </CheckboxRow>
+      
+      <h3 className={styles.sectionTitle}>Rated Modules</h3>
       <CheckboxRow
-        checked={value.modules.continuum ?? false}
+        checked={value.modules.sensorGrid ?? false}
         disabled={disabled}
-        onChange={(checked) => setModules({ continuum: checked })}
+        onChange={(checked) => setModules({ sensorGrid: checked })}
       >
-        Module Alpha — Continuum
+        Module Gamma — Sensor Grid (strategic tile market)
+      </CheckboxRow>
+      {value.modules.sensorGrid ? (
+        <div className={`${formStyles.field} ${styles.subOption}`}>
+          <label htmlFor="charter-sensor-grid-size">Sensor Grid size</label>
+          <select
+            id="charter-sensor-grid-size"
+            disabled={disabled}
+            value={value.modules.sensorGridSize ?? 5}
+            onChange={(e) =>
+              setModules({
+                sensorGridSize: Number(e.target.value),
+              })
+            }
+          >
+            <option value={4}>4 tiles</option>
+            <option value={5}>5 tiles (default)</option>
+          </select>
+        </div>
+      ) : null}
+      <CheckboxRow
+        checked={value.modules.warpDriveSpool ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ warpDriveSpool: checked })}
+      >
+        Module Delta — Engage Warp Drive (continuous draw until mismatch)
+      </CheckboxRow>
+      <CheckboxRow
+        checked={value.modules.longestTrail ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ longestTrail: checked })}
+      >
+        Module Theta — Longest Trail Bonus
+      </CheckboxRow>
+      {value.modules.longestTrail ? (
+        <div className={`${formStyles.field} ${styles.subOption}`}>
+          <label htmlFor="charter-longest-trail-bonus">Longest Trail bonus</label>
+          <select
+            id="charter-longest-trail-bonus"
+            disabled={disabled}
+            value={value.modules.longestTrailBonus ?? -3}
+            onChange={(e) =>
+              setModules({
+                longestTrailBonus: Number(e.target.value),
+              })
+            }
+          >
+            <option value={-3}>-3 points (default)</option>
+            <option value={-5}>-5 points</option>
+            <option value={-7}>-7 points</option>
+          </select>
+        </div>
+      ) : null}
+      <CheckboxRow
+        checked={value.modules.doubleDown ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ doubleDown: checked })}
+      >
+        Module Iota — Double Down (next player draws extra tiles)
+      </CheckboxRow>
+      {value.modules.doubleDown ? (
+        <div className={`${formStyles.field} ${styles.subOption}`}>
+          <label htmlFor="charter-double-down-draw">Extra tiles to draw</label>
+          <select
+            id="charter-double-down-draw"
+            disabled={disabled}
+            value={value.modules.doubleDownDrawCount ?? 2}
+            onChange={(e) =>
+              setModules({
+                doubleDownDrawCount: Number(e.target.value),
+              })
+            }
+          >
+            <option value={1}>1 tile</option>
+            <option value={2}>2 tiles (default)</option>
+            <option value={3}>3 tiles</option>
+          </select>
+        </div>
+      ) : null}
+      <CheckboxRow
+        checked={value.modules.temporalDebt ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ temporalDebt: checked })}
+      >
+        Module Eta — Temporal Debt (pay 2 points per draw from uncharted)
+      </CheckboxRow>
+      {value.modules.temporalDebt ? (
+        <div className={`${formStyles.field} ${styles.subOption}`}>
+          <label htmlFor="charter-temporal-debt-cost">Cost per debt token</label>
+          <select
+            id="charter-temporal-debt-cost"
+            disabled={disabled}
+            value={value.modules.temporalDebtCostPerToken ?? 2}
+            onChange={(e) =>
+              setModules({
+                temporalDebtCostPerToken: Number(e.target.value),
+              })
+            }
+          >
+            <option value={1}>1 point</option>
+            <option value={2}>2 points (default)</option>
+            <option value={3}>3 points</option>
+          </select>
+        </div>
+      ) : null}
+      <CheckboxRow
+        checked={value.modules.temporalInversion ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ temporalInversion: checked })}
+      >
+        Module Kappa — Temporal Inversion (even rounds score inverted)
+      </CheckboxRow>
+      
+      <h3 className={styles.sectionTitle}>Warped Modules (Exhibition Only)</h3>
+      <CheckboxRow
+        checked={value.modules.wormholes ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ wormholes: checked })}
+      >
+        Module Lambda — Wormholes (trail swap on Neutral Zone double)
       </CheckboxRow>
 
       <h3 className={styles.sectionTitle}>Game options</h3>
@@ -195,6 +325,16 @@ export function CharterSetupFields({
       >
         Round starter plays two tiles (Deluxe-style)
       </CheckboxRow>
+      {value.houseRules.roundStarterPlaysTwo ? (
+        <CheckboxRow
+          checked={value.houseRules.roundStarterOwnTrailOnly ?? false}
+          disabled={disabled}
+          onChange={(checked) => setHouseRules({ roundStarterOwnTrailOnly: checked })}
+          className={styles.subOption}
+        >
+          Restrict both tiles to own trail only
+        </CheckboxRow>
+      ) : null}
       <CheckboxRow
         checked={value.houseRules.dropToImpulseCall ?? false}
         disabled={disabled}
