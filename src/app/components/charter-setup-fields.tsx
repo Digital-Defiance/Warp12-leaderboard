@@ -210,6 +210,46 @@ export function CharterSetupFields({
           </select>
         </div>
       ) : null}
+
+      <h3 className={styles.sectionTitle}>Fleet Squadrons</h3>
+      <CheckboxRow
+        checked={value.modules.squadrons ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ squadrons: checked })}
+      >
+        Module Zeta — Fleet Squadrons (shared trails &amp; beacons)
+      </CheckboxRow>
+      {value.modules.squadrons ? (
+        <div className={`${formStyles.field} ${styles.subOption}`}>
+          <label htmlFor="charter-squadron-size">Captains per squadron</label>
+          <select
+            id="charter-squadron-size"
+            disabled={disabled}
+            value={value.modules.squadronSize ?? 2}
+            onChange={(e) =>
+              setModules({
+                squadronSize: Number(e.target.value) === 3 ? 3 : 2,
+              })
+            }
+          >
+            <option value={2}>2 (default)</option>
+            <option value={3}>3</option>
+          </select>
+          <p className={panelStyles.panelBody}>
+            Online only. Fleet size must divide evenly. Rated Warp 12 writes
+            Squad TEI — never the free-for-all ladder.
+          </p>
+        </div>
+      ) : null}
+
+      <h3 className={styles.sectionTitle}>Warped Modules (Exhibition Only)</h3>
+      <CheckboxRow
+        checked={value.modules.drafting ?? false}
+        disabled={disabled}
+        onChange={(checked) => setModules({ drafting: checked })}
+      >
+        Module Epsilon — Tactical Requisition (Drafting)
+      </CheckboxRow>
       <CheckboxRow
         checked={value.modules.temporalInversion ?? false}
         disabled={disabled}
@@ -217,8 +257,6 @@ export function CharterSetupFields({
       >
         Module Kappa — Temporal Inversion (even rounds score inverted)
       </CheckboxRow>
-      
-      <h3 className={styles.sectionTitle}>Warped Modules (Exhibition Only)</h3>
       <CheckboxRow
         checked={value.modules.wormholes ?? false}
         disabled={disabled}
