@@ -1,12 +1,40 @@
+import { useEffect, useState, type FC } from 'react';
 import { Link } from 'react-router-dom';
 
+import { fetchActiveSectorCount } from '../../firebase/active-sectors.js';
 import panelStyles from '../components/panel.module.scss';
 import styles from './home-page.module.scss';
-import type { FC } from 'react';
 
 const BRIDGE_URL = 'https://warp.iwdf.org';
 
 export const HomePage: FC = () => {
+  const [activeSectors, setActiveSectors] = useState<number | null>(null);
+  const [activeError, setActiveError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      void fetchActiveSectorCount()
+        .then((res) => {
+          if (!cancelled) {
+            setActiveSectors(res.active);
+            setActiveError(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setActiveError(true);
+          }
+        });
+    };
+    load();
+    const timer = window.setInterval(load, 45_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   return (
     <div className={styles.page}>
       <section className={panelStyles.panel}>
@@ -18,6 +46,17 @@ export const HomePage: FC = () => {
           numerical tiles is a profound tactical discipline. What casual players see as matching
           pips, a Captain recognizes as vector management and probability control. The board is
           your bridge. Chart your trail.
+        </p>
+        <p className={styles.activePulse} role="status" aria-live="polite">
+          {activeSectors == null && !activeError
+            ? 'Scanning active sectors…'
+            : activeError
+              ? 'Live sector count temporarily unavailable.'
+              : activeSectors === 0
+                ? 'No online sectors underway right now — open one on the bridge.'
+                : activeSectors === 1
+                  ? '1 online sector underway on the bridge.'
+                  : `${activeSectors} online sectors underway on the bridge.`}
         </p>
         <h2 className={styles.hColor}>A New Era for the Board</h2>
         <p>What was once a chaotic parlor game of "trains" has been engineered into Warp Dominoes—a
@@ -125,4 +164,4 @@ export const HomePage: FC = () => {
       </section>
     </div>
   );
-}
+};

@@ -18,6 +18,14 @@
   color: rgba(56, 189, 248, 1);
 }
 
+.activePulse {
+  font-family: var(--font-federation, system-ui);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  color: #7dd3fc;
+  margin: 0.75rem 0 1.25rem;
+}
+
 .iwdfFederation {
   font-family: var(--font-federation);
 }

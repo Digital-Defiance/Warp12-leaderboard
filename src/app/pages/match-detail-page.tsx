@@ -108,7 +108,10 @@ export function MatchDetailPage() {
               onClick={() => downloadMatchCertificate(match.certificate!)}
             >
               Download match certificate (JSON)
-            </button>
+            </button>{' '}
+            <Link to={`/verify?code=${encodeURIComponent(match.matchCode)}`}>
+              Verify signature / PDF
+            </Link>
           </p>
         )}
       </section>

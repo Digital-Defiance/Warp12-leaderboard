@@ -17,6 +17,7 @@ import { TeiCalculatorPage } from './pages/tei-calculator-page';
 import { CrewsPage } from './pages/crews-page';
 import { CrewDetailPage } from './pages/crew-detail-page';
 import { CrewJoinPage } from './pages/crew-join-page';
+import { VerifyPage } from './pages/verify-page';
 import styles from './app.module.scss';
 import { IWDFLogo } from './IWDFLogo';
 import { Warp12 } from './pages/warp12';
@@ -32,6 +33,7 @@ const SLUG_MAP: { pattern: string; slug: string }[] = [
   { pattern: '/matches/:matchCode?', slug: "Tournament Reporting" },
   { pattern: '/officiate', slug: "Tournament Reporting" },
   { pattern: '/officiate/:matchCode?', slug: "Tournament Reporting" },
+  { pattern: '/verify', slug: "Certificate Verification" },
   { pattern: '/warp-factor', slug: "Official Position" },
   { pattern: '/', slug: "Fleet Performance Archive" }, // everything else uses the default slug
 ];
@@ -77,6 +79,9 @@ function AppShell() {
           <NavLink to="/crews" className={navClass}>
             Crews
           </NavLink>
+          <NavLink to="/verify" className={navClass}>
+            Verify
+          </NavLink>
           <NavLink to="/leaderboard" className={navClass}>
             Leaderboard
           </NavLink>
@@ -104,6 +109,7 @@ function AppShell() {
             <Route path="/matches/:matchCode" element={<MatchDetailPage />} />
             <Route path="/officiate" element={<OfficiatePage />} />
             <Route path="/officiate/:matchCode" element={<OfficiateDetailPage />} />
+            <Route path="/verify" element={<VerifyPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/crews" element={<CrewsPage />} />
