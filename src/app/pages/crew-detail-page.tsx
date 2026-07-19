@@ -212,18 +212,17 @@ export function CrewDetailPage() {
         : null;
 
   return (
-    <div className={pageStyles.page}>
+    <div className={pageStyles.page} data-testid="crew-detail-page">
       <p>
         <Link to="/crews">← All crews</Link>
       </p>
 
-      {loading && <p className={panelStyles.panelBody}>Loading crew…</p>}
-      {error && <p className={panelStyles.errorState}>{error}</p>}
-
-      {charter && (
-        <>
-          <section className={panelStyles.panel}>
-            <p className={panelStyles.panelEyebrow}>Crew charter</p>
+      <section className={panelStyles.panel}>
+        <p className={panelStyles.panelEyebrow}>Crew charter</p>
+        {loading && <p className={panelStyles.panelBody}>Loading crew…</p>}
+        {error && <p className={panelStyles.errorState}>{error}</p>}
+        {charter && (
+          <>
             <h1 className={panelStyles.panelTitle}>{charter.name}</h1>
             <p className={panelStyles.panelBody}>{charterSummaryLine(charter)}</p>
             <p className={panelStyles.panelBody}>
@@ -235,8 +234,12 @@ export function CrewDetailPage() {
                   ? ' · listed — request to join'
                   : ' · invite-only'}
             </p>
-          </section>
+          </>
+        )}
+      </section>
 
+      {charter && (
+        <>
           <SignInPanel
             requireVerified
             title="Captain sign-in"

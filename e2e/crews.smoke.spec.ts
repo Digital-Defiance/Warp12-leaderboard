@@ -14,7 +14,9 @@ test.describe('leaderboard crews (smoke)', () => {
   test('global official route renders crew detail shell', async ({ page }) => {
     await page.goto('/crews/global-official');
 
+    await expect(page.getByTestId('crew-detail-page')).toBeVisible();
     await expect(page.getByRole('link', { name: '← All crews' })).toBeVisible();
+    // Eyebrow is part of the static shell (not gated on Firebase success).
     await expect(page.getByText('Crew charter')).toBeVisible();
   });
 
