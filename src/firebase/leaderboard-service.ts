@@ -407,6 +407,36 @@ export async function fetchMatchLogById(
   return snapshot.data() as PublishedLogDocument;
 }
 
+/**
+ * Prefer IWDF call sign; fall back to TEI stats name (legacy / Bridge-only).
+ */
+export { resolveFederationCallSign } from './call-sign.js';
+
+/**
+ * Keep playerStats.displayName aligned with the federation call sign
+ * (Bridge TEI title + ladders). Cosmetic-only write — ratings untouched.
+ */
+export async function syncCallSignToPlayerStats(
+  uid: string,
+  displayName: string
+): Promise<void> {
+  const db = getFirestoreDb();
+  if (!db) {
+    throw new Error('Firebase is not configured');
+  }
+
+  const now = new Date().toISOString();
+  await setDoc(
+    doc(db, FIRESTORE_COLLECTIONS.playerStats, uid),
+    {
+      uid,
+      displayName: displayName.trim() || 'Captain',
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+}
+
 export async function upsertPlayerProfile(
   profile: PlayerProfileDocument
 ): Promise<void> {
@@ -420,7 +450,9 @@ export async function upsertPlayerProfile(
     stripUndefined(profile),
     { merge: true }
   );
+  await syncCallSignToPlayerStats(profile.uid, profile.displayName);
 }
+
 
 export async function upsertPlayerStats(
   stats: PlayerStatsDocument

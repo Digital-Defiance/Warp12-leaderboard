@@ -38,6 +38,14 @@
   }
 }
 
+.fieldHint {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: var(--warp-text-muted, #94a3b8);
+  line-height: 1.35;
+}
+
 .fieldset {
   margin: 0;
   padding: 0;

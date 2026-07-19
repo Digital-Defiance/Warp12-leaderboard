@@ -8,6 +8,7 @@ import { useFirebaseAuth } from '../../firebase/auth-context.js';
 import {
   fetchPlayerProfile,
   fetchPlayerStats,
+  resolveFederationCallSign,
   upsertPlayerProfile,
 } from '../../firebase/leaderboard-service.js';
 import { getCharter, listMyCharters } from '../../firebase/charter-service.js';
@@ -112,7 +113,7 @@ export function ProfilePage() {
 
         setProfile(loadedProfile);
         setStats(loadedStats);
-        setDisplayName(loadedProfile?.displayName ?? 'Captain');
+        setDisplayName(resolveFederationCallSign(loadedProfile, loadedStats));
         setBio(loadedProfile?.bio ?? '');
         setGamingIds(loadedProfile?.gamingIds ?? {});
 
@@ -198,6 +199,11 @@ export function ProfilePage() {
     try {
       await upsertPlayerProfile(nextProfile);
       setProfile(nextProfile);
+      setStats((current) =>
+        current
+          ? { ...current, displayName: nextProfile.displayName, updatedAt: now }
+          : current
+      );
       setMessage('Profile saved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save profile');
@@ -390,7 +396,11 @@ export function ProfilePage() {
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               maxLength={32}
+              aria-describedby="call-sign-hint"
             />
+            <span id="call-sign-hint" className={styles.fieldHint}>
+              Also used as your name on Warp TEI and practice ladders.
+            </span>
           </label>
 
           <label className={styles.field}>
