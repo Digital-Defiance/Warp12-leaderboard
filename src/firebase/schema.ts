@@ -206,6 +206,16 @@ export interface GamingPlatformIds {
   xboxLive?: string;
 }
 
+/** Matches Warp captain identity — shared for federation narration / avatars. */
+export type CaptainGender = 'other' | 'male' | 'female';
+
+export type PronounPresetId = 'they' | 'she' | 'he' | 'custom';
+
+export interface CaptainPronounPreference {
+  preset: PronounPresetId;
+  custom?: string;
+}
+
 export interface PlayerProfileDocument {
   uid: string;
   displayName: string;
@@ -214,6 +224,12 @@ export interface PlayerProfileDocument {
   avatarUrl?: string;
   visibility: ProfileVisibility;
   gamingIds?: GamingPlatformIds;
+  /** Avatar presentation (Captain X / male / female). Independent of pronouns. */
+  captainGender?: CaptainGender;
+  /** Narration pronouns for commentator / TTS. */
+  captainPronouns?: CaptainPronounPreference;
+  /** Optional TTS pronunciation of the call sign. */
+  speakAs?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -250,6 +266,10 @@ export interface HumanTeiStats {
 export interface PlayerStatsDocument {
   uid: string;
   displayName: string;
+  /** Mirrored from federation profile for Warp narration / avatars. */
+  captainGender?: CaptainGender;
+  captainPronouns?: CaptainPronounPreference;
+  speakAs?: string | null;
   matchesCompleted: number;
   matchesWon: number;
   roundsPlayed: number;

@@ -14,6 +14,7 @@ import {
 import { getCharter, listMyCharters } from '../../firebase/charter-service.js';
 import { getFirestoreDb, isFirebaseConfigured } from '../../firebase/config.js';
 import { SignInPanel } from '../components/sign-in-panel.js';
+import { CaptainIdentityFieldset } from '../components/captain-identity-fieldset.js';
 import panelStyles from '../components/panel.module.scss';
 import statCardStyles from '../components/stat-card.module.scss';
 import { TeiGradeText } from '../components/tei-grade-text.js';
@@ -24,6 +25,19 @@ import type {
   PlayerProfileDocument,
   PlayerStatsDocument,
 } from '../../firebase/schema.js';
+import {
+  DEFAULT_CAPTAIN_GENDER,
+  DEFAULT_CAPTAIN_PRONOUNS,
+  captainGenderLabel,
+  captainPilotIcon,
+  captainPronounsLabel,
+  isCaptainGender,
+  isCaptainPronounPreference,
+  sanitizePronounPreference,
+  sanitizeSpeakAs,
+  type CaptainGender,
+  type CaptainPronounPreference,
+} from '../../lib/captain-identity.js';
 import {
   assistedMatchStats,
   displayGroupObjectiveRating,
@@ -145,6 +159,11 @@ export function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [gamingIds, setGamingIds] = useState<GamingPlatformIds>({});
+  const [captainGender, setCaptainGender] =
+    useState<CaptainGender>(DEFAULT_CAPTAIN_GENDER);
+  const [captainPronouns, setCaptainPronouns] =
+    useState<CaptainPronounPreference>(DEFAULT_CAPTAIN_PRONOUNS);
+  const [speakAs, setSpeakAs] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -182,6 +201,27 @@ export function ProfilePage() {
         setDisplayName(resolveFederationCallSign(loadedProfile, loadedStats));
         setBio(loadedProfile?.bio ?? '');
         setGamingIds(loadedProfile?.gamingIds ?? {});
+        setCaptainGender(
+          isCaptainGender(loadedProfile?.captainGender)
+            ? loadedProfile.captainGender
+            : isCaptainGender(loadedStats?.captainGender)
+              ? loadedStats.captainGender
+              : DEFAULT_CAPTAIN_GENDER
+        );
+        setCaptainPronouns(
+          isCaptainPronounPreference(loadedProfile?.captainPronouns)
+            ? sanitizePronounPreference(loadedProfile.captainPronouns)
+            : isCaptainPronounPreference(loadedStats?.captainPronouns)
+              ? sanitizePronounPreference(loadedStats.captainPronouns)
+              : DEFAULT_CAPTAIN_PRONOUNS
+        );
+        setSpeakAs(
+          sanitizeSpeakAs(
+            loadedProfile?.speakAs !== undefined
+              ? loadedProfile.speakAs
+              : (loadedStats?.speakAs ?? null)
+          )
+        );
 
         if (loadedStats) {
           const charterIds = Object.keys(loadedStats.groupTei ?? {});
@@ -258,6 +298,9 @@ export function ProfilePage() {
         googlePlayGames: gamingIds.googlePlayGames?.trim() || undefined,
         xboxLive: gamingIds.xboxLive?.trim() || undefined,
       },
+      captainGender,
+      captainPronouns: sanitizePronounPreference(captainPronouns),
+      speakAs: sanitizeSpeakAs(speakAs),
       createdAt: profile?.createdAt ?? now,
       updatedAt: now,
     };
@@ -302,15 +345,30 @@ export function ProfilePage() {
               : callSign || 'Captain Profile'}
         </h1>
         <p className={panelStyles.panelBody}>
-          Your call sign is shared across the Interstellar Warp Gaming Federation
-          — Warp, Subspace Lattice, and TEI ladders. Link platform gaming IDs so
-          future native builds can sync achievements with Apple Game Center,
-          Google Play Games, and Xbox Live on Windows.
+          Your call sign and captain identity are shared across the Interstellar
+          Warp Gaming Federation — Warp, Subspace Lattice, and TEI ladders.
+          Avatar, pronouns, and spoken-as keep narration consistent. Link
+          platform gaming IDs so future native builds can sync achievements with
+          Apple Game Center, Google Play Games, and Xbox Live on Windows.
         </p>
         {callSign && !needsSignIn ? (
-          <p className={styles.callSignLine}>
-            Call sign <strong>{callSign}</strong>
-          </p>
+          <div className={styles.identitySummary}>
+            <img
+              src={captainPilotIcon(captainGender)}
+              alt=""
+              className={styles.identityAvatar}
+            />
+            <div>
+              <p className={styles.callSignLine}>
+                Call sign <strong>{callSign}</strong>
+              </p>
+              <p className={styles.identityMeta}>
+                {captainGenderLabel(captainGender)} ·{' '}
+                {captainPronounsLabel(captainPronouns)}
+                {speakAs ? ` · spoken as “${speakAs}”` : ''}
+              </p>
+            </div>
+          </div>
         ) : null}
       </section>
 
@@ -615,6 +673,16 @@ export function ProfilePage() {
               maxLength={280}
             />
           </label>
+
+          <CaptainIdentityFieldset
+            gender={captainGender}
+            onGenderChange={setCaptainGender}
+            pronouns={captainPronouns}
+            onPronounsChange={setCaptainPronouns}
+            speakAs={speakAs}
+            onSpeakAsChange={setSpeakAs}
+            disabled={saving}
+          />
 
           <fieldset className={styles.fieldset}>
             <legend>Gaming platform IDs</legend>

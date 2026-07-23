@@ -413,12 +413,18 @@ export async function fetchMatchLogById(
 export { resolveFederationCallSign } from './call-sign.js';
 
 /**
- * Keep playerStats.displayName aligned with the federation call sign
- * (Bridge TEI title + ladders). Cosmetic-only write — ratings untouched.
+ * Keep playerStats call sign + captain identity aligned with the federation
+ * profile (Bridge TEI title, Warp narration, avatars). Cosmetic-only write —
+ * ratings untouched.
  */
 export async function syncCallSignToPlayerStats(
   uid: string,
-  displayName: string
+  displayName: string,
+  identity?: {
+    captainGender?: PlayerProfileDocument['captainGender'];
+    captainPronouns?: PlayerProfileDocument['captainPronouns'];
+    speakAs?: PlayerProfileDocument['speakAs'];
+  }
 ): Promise<void> {
   const db = getFirestoreDb();
   if (!db) {
@@ -428,11 +434,18 @@ export async function syncCallSignToPlayerStats(
   const now = new Date().toISOString();
   await setDoc(
     doc(db, FIRESTORE_COLLECTIONS.playerStats, uid),
-    {
+    stripUndefined({
       uid,
       displayName: displayName.trim() || 'Captain',
+      ...(identity?.captainGender !== undefined
+        ? { captainGender: identity.captainGender }
+        : {}),
+      ...(identity?.captainPronouns !== undefined
+        ? { captainPronouns: identity.captainPronouns }
+        : {}),
+      ...(identity?.speakAs !== undefined ? { speakAs: identity.speakAs } : {}),
       updatedAt: now,
-    },
+    }),
     { merge: true }
   );
 }
@@ -450,7 +463,11 @@ export async function upsertPlayerProfile(
     stripUndefined(profile),
     { merge: true }
   );
-  await syncCallSignToPlayerStats(profile.uid, profile.displayName);
+  await syncCallSignToPlayerStats(profile.uid, profile.displayName, {
+    captainGender: profile.captainGender,
+    captainPronouns: profile.captainPronouns,
+    speakAs: profile.speakAs,
+  });
 }
 
 
