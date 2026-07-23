@@ -14,11 +14,17 @@ export async function listMyCharters(): Promise<PublicCharterView[]> {
   if (!isVerifiedUser(auth?.currentUser ?? null)) {
     return [];
   }
-  const result = await callFunction<Record<string, never>, { charters: PublicCharterView[] }>(
-    'listMyCharters',
-    {}
-  );
-  return result.charters ?? [];
+  try {
+    const result = await callFunction<
+      Record<string, never>,
+      { charters: PublicCharterView[] }
+    >('listMyCharters', {}, { persistError: false });
+    return result.charters ?? [];
+  } catch (err) {
+    // Profile / lobby can proceed without crew list; avoid sticky error banner.
+    console.warn('[charters] listMyCharters failed', err);
+    return [];
+  }
 }
 
 export async function listListedCharters(): Promise<PublicCharterView[]> {

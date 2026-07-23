@@ -4,6 +4,7 @@ import {
   formatAuthError,
   isVerifiedUser,
   signOutUser,
+  startAppleSignIn,
   startGoogleSignIn,
   continueAsGuest,
 } from '../../firebase/auth-actions.js';
@@ -18,14 +19,14 @@ import styles from './sign-in-panel.module.scss';
 export function SignInPanel({
   requireVerified = false,
   title = 'Sign in',
-  hint = 'Use Google for rated matches and officiation. Guest access is for browsing only.',
+  hint = 'Use Google or Apple for rated matches and officiation. Guest access is for browsing only.',
 }: {
   requireVerified?: boolean;
   title?: string;
   hint?: string;
 }) {
   const auth = useFirebaseAuth();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'google' | 'apple' | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   if (!auth.configured) {
@@ -53,20 +54,23 @@ export function SignInPanel({
     );
   }
 
-  const handleGoogleSignIn = async () => {
-    setBusy(true);
+  const handleProviderSignIn = async (provider: 'google' | 'apple') => {
+    setBusy(provider);
     setLocalError(null);
     try {
-      const result = await startGoogleSignIn();
+      const result =
+        provider === 'apple'
+          ? await startAppleSignIn()
+          : await startGoogleSignIn();
       if (result === 'redirecting') {
         return;
       }
-      setBusy(false);
+      setBusy(null);
     } catch (err) {
       const message = formatAuthError(err);
       persistAuthError(message, err);
       setLocalError(message);
-      setBusy(false);
+      setBusy(null);
     }
   };
 
@@ -85,8 +89,8 @@ export function SignInPanel({
       <p className={panelStyles.panelBody}>{hint}</p>
       {auth.user?.isAnonymous && requireVerified && (
         <p className={panelStyles.panelBody}>
-          You have a guest session from browsing. Continue with Google to link or replace
-          it with a permanent account.
+          You have a guest session from browsing. Continue with Google or Apple to
+          link or replace it with a permanent account.
         </p>
       )}
       {errorMessage && (
@@ -101,16 +105,24 @@ export function SignInPanel({
         <button
           type="button"
           className={styles.buttonPrimary}
-          disabled={!auth.ready || busy}
-          onClick={() => void handleGoogleSignIn()}
+          disabled={!auth.ready || busy !== null}
+          onClick={() => void handleProviderSignIn('google')}
         >
-          {busy ? 'Opening Google sign-in…' : 'Continue with Google'}
+          {busy === 'google' ? 'Opening Google sign-in…' : 'Continue with Google'}
+        </button>
+        <button
+          type="button"
+          className={styles.buttonSecondary}
+          disabled={!auth.ready || busy !== null}
+          onClick={() => void handleProviderSignIn('apple')}
+        >
+          {busy === 'apple' ? 'Opening Apple sign-in…' : 'Continue with Apple'}
         </button>
         {!requireVerified && (
           <button
             type="button"
             className={styles.buttonSecondary}
-            disabled={!auth.ready || busy}
+            disabled={!auth.ready || busy !== null}
             onClick={() =>
               void continueAsGuest().catch((err) => {
                 const message = formatAuthError(err);

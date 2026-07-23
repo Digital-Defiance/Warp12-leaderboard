@@ -45,7 +45,8 @@ export function getCloudFunctions() {
 
 export async function callFunction<TInput, TResult>(
   name: string,
-  data: TInput
+  data: TInput,
+  options?: { persistError?: boolean }
 ): Promise<TResult> {
   const functions = getCloudFunctions();
   if (!functions) {
@@ -56,7 +57,9 @@ export async function callFunction<TInput, TResult>(
     const result = await callable(data);
     return result.data;
   } catch (err) {
-    persistCallableError(name, err);
+    if (options?.persistError !== false) {
+      persistCallableError(name, err);
+    }
     throw err;
   }
 }

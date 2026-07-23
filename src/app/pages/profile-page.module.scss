@@ -122,6 +122,10 @@
   width: 2.5rem;
   height: 2.5rem;
   flex-shrink: 0;
+  object-fit: contain;
+  /* Duotone SVGs are near-black; tint to panel text on dark backgrounds. */
+  filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(427%)
+    hue-rotate(169deg) brightness(98%) contrast(92%);
   opacity: 0.92;
 }
 

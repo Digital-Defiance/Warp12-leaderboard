@@ -1,5 +1,6 @@
 import {
   GoogleAuthProvider,
+  OAuthProvider,
   getRedirectResult,
   linkWithPopup,
   signInAnonymously,
@@ -23,6 +24,13 @@ export function isVerifiedUser(user: User | null): boolean {
   return Boolean(user && !user.isAnonymous);
 }
 
+function appleProvider(): OAuthProvider {
+  const provider = new OAuthProvider('apple.com');
+  provider.addScope('email');
+  provider.addScope('name');
+  return provider;
+}
+
 export function formatAuthError(err: unknown): string {
   const code =
     err && typeof err === 'object' && 'code' in err
@@ -38,11 +46,11 @@ export function formatAuthError(err: unknown): string {
     case 'auth/unauthorized-domain':
       return 'This domain is not authorized for Firebase sign-in.';
     case 'auth/credential-already-in-use':
-      return 'That Google account already exists. Sign out, then sign in with Google again.';
+      return 'That account already exists. Sign out, then sign in again with Google or Apple.';
     case 'auth/account-exists-with-different-credential':
-      return 'This email is linked to another sign-in method.';
+      return 'This email is linked to another sign-in method. Try the other provider, or use the same one you used before.';
     case 'auth/operation-not-allowed':
-      return 'Google sign-in is not enabled for this Firebase project.';
+      return 'That sign-in method is not enabled for this Firebase project.';
     case 'auth/web-storage-unsupported':
       return 'Browser storage is blocked. Allow cookies/storage for this site.';
     case 'auth/network-request-failed':
@@ -66,7 +74,7 @@ function looksLikeRedirectReturn(): boolean {
 /** React StrictMode mounts twice — only consume redirect result once per page load. */
 let redirectResultPromise: Promise<User | null> | null = null;
 
-async function completeGoogleRedirectOnce(): Promise<User | null> {
+async function completeAuthRedirectOnce(): Promise<User | null> {
   const auth = getFirebaseAuth();
   if (!auth) {
     return null;
@@ -79,7 +87,7 @@ async function completeGoogleRedirectOnce(): Promise<User | null> {
     }
     if (looksLikeRedirectReturn()) {
       persistAuthError(
-        'Google sign-in returned but no session was saved. Allow site storage/cookies, then try again with the popup sign-in button.',
+        'Sign-in returned but no session was saved. Allow site storage/cookies, then try again with the popup sign-in button.',
         null
       );
     }
@@ -90,20 +98,19 @@ async function completeGoogleRedirectOnce(): Promise<User | null> {
   }
 }
 
-/** Call once on load to finish a redirect-based Google sign-in. */
+/** Call once on load to finish a redirect-based sign-in (Google or Apple). */
 export function completeGoogleRedirect(): Promise<User | null> {
-  redirectResultPromise ??= completeGoogleRedirectOnce();
+  redirectResultPromise ??= completeAuthRedirectOnce();
   return redirectResultPromise;
 }
 
-async function signInWithGooglePopup(): Promise<User> {
+async function signInWithProviderPopup(
+  provider: GoogleAuthProvider | OAuthProvider
+): Promise<User> {
   const auth = getFirebaseAuth();
   if (!auth) {
     throw new Error('Firebase auth unavailable');
   }
-
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
 
   if (auth.currentUser && !auth.currentUser.isAnonymous) {
     return auth.currentUser;
@@ -143,8 +150,11 @@ export async function startGoogleSignIn(): Promise<'redirecting' | User> {
     throw new Error('Firebase auth unavailable');
   }
 
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
   try {
-    return await signInWithGooglePopup();
+    return await signInWithProviderPopup(provider);
   } catch (err) {
     const code =
       err && typeof err === 'object' && 'code' in err
@@ -155,8 +165,34 @@ export async function startGoogleSignIn(): Promise<'redirecting' | User> {
     }
   }
 
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
+  if (auth.currentUser?.isAnonymous) {
+    await signOut(auth);
+  }
+  await signInWithRedirect(auth, provider);
+  return 'redirecting';
+}
+
+/** Apple sign-in via popup; redirect fallback when popups are blocked. */
+export async function startAppleSignIn(): Promise<'redirecting' | User> {
+  const auth = getFirebaseAuth();
+  if (!auth) {
+    throw new Error('Firebase auth unavailable');
+  }
+
+  const provider = appleProvider();
+
+  try {
+    return await signInWithProviderPopup(provider);
+  } catch (err) {
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? String((err as { code: string }).code)
+        : '';
+    if (code !== 'auth/popup-blocked') {
+      throw err;
+    }
+  }
+
   if (auth.currentUser?.isAnonymous) {
     await signOut(auth);
   }

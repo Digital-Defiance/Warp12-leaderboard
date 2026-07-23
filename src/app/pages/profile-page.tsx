@@ -185,6 +185,7 @@ export function ProfilePage() {
 
     async function load() {
       try {
+        setError(null);
         const [loadedProfile, loadedStats, loadedLattice] = await Promise.all([
           fetchPlayerProfile(targetUid),
           fetchPlayerStats(targetUid),
@@ -227,7 +228,11 @@ export function ProfilePage() {
           const charterIds = Object.keys(loadedStats.groupTei ?? {});
           let charters: PublicCharterView[] = [];
           if (isOwnProfile && user && !user.isAnonymous) {
-            charters = await listMyCharters();
+            try {
+              charters = await listMyCharters();
+            } catch (err) {
+              console.warn('[profile] listMyCharters failed', err);
+            }
           }
           const charterById = new Map(charters.map((c) => [c.charterId, c]));
           const rows: CrewTeiRow[] = [];
