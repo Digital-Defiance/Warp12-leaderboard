@@ -1,28 +1,36 @@
 {
-  "name": "@warp12/leaderboard",
+  "name": "@iwgf/leaderboard",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.17.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "deploy:hosting": "yarn build && cd .. && firebase deploy --only hosting:leaderboard --project warp-12"
+    "preview": "vite preview --port 4310 --host localhost",
+    "test": "vitest run",
+    "deploy:hosting": "yarn build && bash ../Warp12/scripts/sync-federation-hosting.sh leaderboard && bash ../Warp12/scripts/firebase-with-env.sh deploy --only hosting:leaderboard",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@warp12/tei-core": "workspace:*",
-    "warp12-engine": "workspace:*",
+    "@warp12/tei-core": "file:../Warp12/libs/tei-core",
+    "double-eighteen": "^0.4.3",
     "firebase": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "6.30.3"
+    "react-router-dom": "6.30.3",
+    "warp12-engine": "^0.4.27"
   },
   "devDependencies": {
+    "@playwright/test": "^1.37.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
+    "firebase-tools": "^14.0.0",
+    "jsdom": "^27.1.0",
     "sass": "^1.97.2",
     "typescript": "~5.9.2",
-    "vite": "^8.0.0"
+    "vite": "^8.0.0",
+    "vitest": "~4.1.0"
   }
 }

@@ -29,34 +29,44 @@ export const Warp12LogoTournament: FC<Warp12LogoTournamentProps> = ({
     >
       <defs>
         <style>{`
-          .cls-1 {
+          .w12t-number {
             font-family: Federation, Federation;
             fill: ${numberColor};
-          }
-
-          .cls-1, .cls-2 {
             font-size: 72px;
           }
 
-          .cls-2 {
+          .w12t-warp {
             fill: ${warpColor};
             font-family: FederationWide, FederationWide;
+            font-size: 72px;
           }
 
-          .cls-3 {
+          .w12t-tagline {
             font-family: NovaLightUltraSSiThinUltraCondensed, 'Nova Light Ultra SSi';
             font-size: 42px;
             fill: ${taglineColor};
           }
 
-          .cls-4 {
-             letter-spacing: -.02em;
+          .w12t-tracking {
+            letter-spacing: -0.02em;
           }
         `}</style>
       </defs>
-      <text className="cls-2" transform="translate(17.16 60.98)"><tspan x="0" y="0">Warp</tspan></text>
-      <text className="cls-1" transform="translate(383.22 60.98)"><tspan x="0" y="0">12</tspan></text>
-      <text className="cls-3" transform="translate(373.32 97.29)"><tspan className="cls-4" x="0" y="0">Tournament Reporting</tspan></text>
+      <text className="w12t-warp" transform="translate(17.16 60.98)">
+        <tspan x="0" y="0">
+          Warp
+        </tspan>
+      </text>
+      <text className="w12t-number" transform="translate(383.22 60.98)">
+        <tspan x="0" y="0">
+          12
+        </tspan>
+      </text>
+      <text className="w12t-tagline" transform="translate(373.32 97.29)">
+        <tspan className="w12t-tracking" x="0" y="0">
+          Tournament Reporting
+        </tspan>
+      </text>
     </svg>
   );
 };

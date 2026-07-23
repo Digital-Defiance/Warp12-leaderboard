@@ -408,7 +408,7 @@ export async function fetchMatchLogById(
 }
 
 /**
- * Prefer IWDF call sign; fall back to TEI stats name (legacy / Bridge-only).
+ * Prefer IWGF call sign; fall back to TEI stats name (legacy / Bridge-only).
  */
 export { resolveFederationCallSign } from './call-sign.js';
 

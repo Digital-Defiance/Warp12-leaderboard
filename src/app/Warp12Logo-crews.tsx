@@ -29,30 +29,40 @@ export const Warp12LogoCrews: FC<Warp12LogoCrewsProps> = ({
     >
       <defs>
         <style>{`
-          .cls-1 {
+          .w12c-number {
             font-family: Federation, Federation;
             fill: ${numberColor};
-          }
-
-          .cls-1, .cls-2 {
             font-size: 72px;
           }
 
-          .cls-2 {
+          .w12c-warp {
             fill: ${warpColor};
             font-family: FederationWide, FederationWide;
+            font-size: 72px;
           }
 
-          .cls-3 {
+          .w12c-tagline {
             font-family: NovaLightUltraSSiThinUltraCondensed, 'Nova Light Ultra SSi';
             font-size: 42px;
             fill: ${taglineColor};
           }
         `}</style>
       </defs>
-      <text className="cls-2" transform="translate(17.16 60.98)"><tspan x="0" y="0">Warp</tspan></text>
-      <text className="cls-1" transform="translate(383.22 60.98)"><tspan x="0" y="0">12</tspan></text>
-      <text className="cls-3" transform="translate(379.6 97.29)"><tspan x="0" y="0">Crews and Charters</tspan></text>
+      <text className="w12c-warp" transform="translate(17.16 60.98)">
+        <tspan x="0" y="0">
+          Warp
+        </tspan>
+      </text>
+      <text className="w12c-number" transform="translate(383.22 60.98)">
+        <tspan x="0" y="0">
+          12
+        </tspan>
+      </text>
+      <text className="w12c-tagline" transform="translate(379.6 97.29)">
+        <tspan x="0" y="0">
+          Crews and Charters
+        </tspan>
+      </text>
     </svg>
   );
 };

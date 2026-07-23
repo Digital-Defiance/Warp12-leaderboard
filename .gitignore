@@ -1,8 +1,11 @@
-node_modules
-dist
+node_modules/
+dist/
 .env
-.env.local
-.env.*.local
-*.log
+.env.*
+!.env.example
 .DS_Store
-.firebase
+*.log
+.firebase/
+.yarn/install-state.gz
+.yarn/cache/
+*.tsbuildinfo

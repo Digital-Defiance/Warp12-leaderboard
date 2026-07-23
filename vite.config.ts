@@ -7,8 +7,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: import.meta.dirname,
   base: '/',
-  envDir: resolve(import.meta.dirname, '../apps/Warp12'),
+  envDir: import.meta.dirname,
   plugins: [react()],
+  resolve: {
+    alias: {
+      // tei-core is src-only (file: sibling); point Vite at its entry.
+      '@warp12/tei-core': resolve(import.meta.dirname, '../Warp12/libs/tei-core/src/index.ts'),
+    },
+  },
   server: {
     port: 4210,
     host: 'localhost',
@@ -22,7 +28,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   test: {
-    name: '@warp12/leaderboard',
+    name: '@iwgf/leaderboard',
     watch: false,
     globals: true,
     environment: 'jsdom',

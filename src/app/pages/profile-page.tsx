@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
 import { Link, useParams } from 'react-router-dom';
 
 import { aiSkillTacticalClassLabel } from '../../lib/tactical-class.js';
-import statCardStyles from '../components/stat-card.module.scss';
-import panelStyles from '../components/panel.module.scss';
+import { isVerifiedUser } from '../../firebase/auth-actions.js';
 import { useFirebaseAuth } from '../../firebase/auth-context.js';
 import {
   fetchPlayerProfile,
@@ -12,7 +12,12 @@ import {
   upsertPlayerProfile,
 } from '../../firebase/leaderboard-service.js';
 import { getCharter, listMyCharters } from '../../firebase/charter-service.js';
-import { isFirebaseConfigured } from '../../firebase/config.js';
+import { getFirestoreDb, isFirebaseConfigured } from '../../firebase/config.js';
+import { SignInPanel } from '../components/sign-in-panel.js';
+import panelStyles from '../components/panel.module.scss';
+import statCardStyles from '../components/stat-card.module.scss';
+import { TeiGradeText } from '../components/tei-grade-text.js';
+import { Warp12Logo } from '../Warp12Logo.js';
 import type {
   AiSkillLevel,
   GamingPlatformIds,
@@ -47,6 +52,61 @@ interface CrewTeiRow {
   pointsTei: number | string | null;
   goOutMatches: number;
   pointsMatches: number;
+}
+
+interface LatticeTrackSummary {
+  displayGrade: string | null;
+  matches: number;
+  wins: number;
+}
+
+interface LatticeProfileSummary {
+  localAi: LatticeTrackSummary;
+  online: LatticeTrackSummary;
+}
+
+function emptyLatticeTrack(): LatticeTrackSummary {
+  return { displayGrade: null, matches: 0, wins: 0 };
+}
+
+function readLatticeTrack(raw: unknown): LatticeTrackSummary {
+  if (!raw || typeof raw !== 'object') {
+    return emptyLatticeTrack();
+  }
+  const data = raw as {
+    displayGrade?: unknown;
+    matches?: unknown;
+    wins?: unknown;
+  };
+  return {
+    displayGrade:
+      typeof data.displayGrade === 'string' && data.displayGrade
+        ? data.displayGrade
+        : null,
+    matches: typeof data.matches === 'number' ? data.matches : 0,
+    wins: typeof data.wins === 'number' ? data.wins : 0,
+  };
+}
+
+async function fetchLatticeProfileSummary(
+  uid: string,
+): Promise<LatticeProfileSummary | null> {
+  const db = getFirestoreDb();
+  if (!db) {
+    return null;
+  }
+  const snap = await getDoc(doc(db, 'latticeTei', uid));
+  if (!snap.exists()) {
+    return {
+      localAi: emptyLatticeTrack(),
+      online: emptyLatticeTrack(),
+    };
+  }
+  const data = snap.data() as Record<string, unknown>;
+  return {
+    localAi: readLatticeTrack(data.localAi),
+    online: readLatticeTrack(data.online),
+  };
 }
 
 function emptyStats(uid: string, displayName: string): PlayerStatsDocument {
@@ -90,11 +150,15 @@ export function ProfilePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [crewTeiRows, setCrewTeiRows] = useState<CrewTeiRow[]>([]);
+  const [latticeSummary, setLatticeSummary] =
+    useState<LatticeProfileSummary | null>(null);
   const configured = isFirebaseConfigured();
+  const needsSignIn = !routeUid && !isVerifiedUser(user);
 
   useEffect(() => {
     if (!configured || !ready || !targetUid) {
       setLoading(false);
+      setLatticeSummary(null);
       return;
     }
 
@@ -102,9 +166,10 @@ export function ProfilePage() {
 
     async function load() {
       try {
-        const [loadedProfile, loadedStats] = await Promise.all([
+        const [loadedProfile, loadedStats, loadedLattice] = await Promise.all([
           fetchPlayerProfile(targetUid),
           fetchPlayerStats(targetUid),
+          fetchLatticeProfileSummary(targetUid),
         ]);
 
         if (cancelled) {
@@ -113,6 +178,7 @@ export function ProfilePage() {
 
         setProfile(loadedProfile);
         setStats(loadedStats);
+        setLatticeSummary(loadedLattice);
         setDisplayName(resolveFederationCallSign(loadedProfile, loadedStats));
         setBio(loadedProfile?.bio ?? '');
         setGamingIds(loadedProfile?.gamingIds ?? {});
@@ -215,174 +281,310 @@ export function ProfilePage() {
   const visibleStats = stats ?? (targetUid ? emptyStats(targetUid, displayName || 'Captain') : null);
   const localAi = normalizeLocalAiStats(visibleStats?.localAi);
   const verified = visibleStats ? verifiedFleetTotals(visibleStats) : null;
+  const lattice = latticeSummary ?? {
+    localAi: emptyLatticeTrack(),
+    online: emptyLatticeTrack(),
+  };
+  const callSign =
+    displayName.trim() ||
+    (isOwnProfile ? user?.displayName?.trim() : '') ||
+    '';
 
   return (
     <div className={styles.page}>
       <section className={panelStyles.panel}>
-        <p className={panelStyles.panelEyebrow}>Captain Record</p>
+        <p className={panelStyles.panelEyebrow}>Federation Profile</p>
         <h1 className={panelStyles.panelTitle}>
-          {isOwnProfile ? 'Your Profile' : displayName || 'Captain Profile'}
+          {needsSignIn
+            ? 'Federation Profile'
+            : isOwnProfile
+              ? 'Your Federation Profile'
+              : callSign || 'Captain Profile'}
         </h1>
         <p className={panelStyles.panelBody}>
-          Link platform gaming IDs so future native builds can sync achievements
-          and leaderboard scores with Apple Game Center, Google Play Games, and
-          Xbox Live on Windows.
+          Your call sign is shared across the Interstellar Warp Gaming Federation
+          — Warp, Subspace Lattice, and TEI ladders. Link platform gaming IDs so
+          future native builds can sync achievements with Apple Game Center,
+          Google Play Games, and Xbox Live on Windows.
         </p>
+        {callSign && !needsSignIn ? (
+          <p className={styles.callSignLine}>
+            Call sign <strong>{callSign}</strong>
+          </p>
+        ) : null}
       </section>
+
+      {!routeUid && configured ? (
+        <SignInPanel
+          requireVerified
+          title="Captain sign-in"
+          hint="Sign in with Google to load your call sign, Warp Dominoes record, and Subspace Lattice TEI."
+        />
+      ) : null}
 
       {!configured && (
         <p className={panelStyles.errorState}>Firebase is not configured.</p>
       )}
 
-      {configured && loading && (
+      {configured && loading && targetUid ? (
         <p className={panelStyles.loadingState}>Loading captain record…</p>
-      )}
+      ) : null}
 
       {error && <p className={panelStyles.errorState}>{error}</p>}
       {message && <p className={styles.success}>{message}</p>}
 
-      {visibleStats && !loading && verified && (
-        <div className={statCardStyles.grid}>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Verified wins</p>
-            <p className={statCardStyles.value}>{verified.matchesWon}</p>
-          </article>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Verified matches</p>
-            <p className={statCardStyles.value}>{verified.matchesCompleted}</p>
-          </article>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Human pool</p>
-            <p className={statCardStyles.value}>{verified.humanMatches}</p>
-          </article>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Practice vs AI</p>
-            <p className={statCardStyles.value}>{verified.practiceAiMatches}</p>
-          </article>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Global go-out TEI</p>
-            <p className={statCardStyles.value}>
-              {displayHumanObjectiveRating(visibleStats, 'go-out') ?? 
-               displayHumanObjectiveTei(visibleStats, 'go-out') ?? '—'}
+      <section className={styles.productSection} data-product="warp">
+        <header className={styles.productHeader}>
+          <Warp12Logo width={180} marginLeft="0" />
+          <div>
+            <h2 className={styles.productTitle}>Warp Dominoes</h2>
+            <p className={styles.productLead}>
+              Verified fleet play, crew TEI, and practice vs AI in the Warp pool.
             </p>
-          </article>
-          <article className={statCardStyles.card}>
-            <p className={statCardStyles.label}>Global points TEI</p>
-            <p className={statCardStyles.value}>
-              {displayHumanObjectiveRating(visibleStats, 'points') ??
-               displayHumanObjectiveTei(visibleStats, 'points') ?? '—'}
-            </p>
-          </article>
-        </div>
-      )}
+          </div>
+        </header>
 
-      {crewTeiRows.length > 0 && !loading && (
-        <section className={styles.localAiSection}>
-          <h2 className={styles.localAiTitle}>Crew TEI</h2>
-          <p className={styles.localAiLead}>
-            Unassisted rated matches scoped to each crew charter. Global Official
-            rows also feed the human pool ladder.
+        {needsSignIn ? (
+          <p className={styles.productEmpty}>
+            Sign in to see your Warp Dominoes standings on this profile.
           </p>
+        ) : (
+          <>
+            {visibleStats && !loading && verified ? (
+              <div className={statCardStyles.grid}>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Verified wins</p>
+                  <p className={statCardStyles.value}>{verified.matchesWon}</p>
+                </article>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Verified matches</p>
+                  <p className={statCardStyles.value}>
+                    {verified.matchesCompleted}
+                  </p>
+                </article>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Human pool</p>
+                  <p className={statCardStyles.value}>{verified.humanMatches}</p>
+                </article>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Practice vs AI</p>
+                  <p className={statCardStyles.value}>
+                    {verified.practiceAiMatches}
+                  </p>
+                </article>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Global go-out TEI</p>
+                  <p className={statCardStyles.value}>
+                    {displayHumanObjectiveRating(visibleStats, 'go-out') ??
+                      displayHumanObjectiveTei(visibleStats, 'go-out') ??
+                      '—'}
+                  </p>
+                </article>
+                <article className={statCardStyles.card}>
+                  <p className={statCardStyles.label}>Global points TEI</p>
+                  <p className={statCardStyles.value}>
+                    {displayHumanObjectiveRating(visibleStats, 'points') ??
+                      displayHumanObjectiveTei(visibleStats, 'points') ??
+                      '—'}
+                  </p>
+                </article>
+              </div>
+            ) : null}
+
+            {crewTeiRows.length > 0 && !loading ? (
+              <div className={styles.nestedBlock}>
+                <h3 className={styles.localAiTitle}>Crew TEI</h3>
+                <p className={styles.localAiLead}>
+                  Unassisted rated matches scoped to each crew charter. Global
+                  Official rows also feed the human pool ladder.
+                </p>
+                <div className={styles.localAiTableWrap}>
+                  <table className={styles.localAiTable}>
+                    <thead>
+                      <tr>
+                        <th>Crew</th>
+                        <th>Go-out TEI</th>
+                        <th>Go-out matches</th>
+                        <th>Points TEI</th>
+                        <th>Points matches</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {crewTeiRows.map((row) => (
+                        <tr key={row.charterId}>
+                          <td>
+                            <Link to={`/crews/${row.slug}`}>{row.name}</Link>
+                          </td>
+                          <td>{row.goOutTei ?? '—'}</td>
+                          <td>{row.goOutMatches}</td>
+                          <td>{row.pointsTei ?? '—'}</td>
+                          <td>{row.pointsMatches}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : null}
+
+            <div className={styles.nestedBlock}>
+              <h3 className={styles.localAiTitle}>Practice vs AI</h3>
+              <p className={styles.localAiLead}>
+                Matches bucketed by the highest AI commission track at your
+                table. Go-out and points each have their own solo TEI track —
+                updated only on server-verified unassisted wins and losses.
+              </p>
+              <div className={styles.localAiTableWrap}>
+                <table className={styles.localAiTable}>
+                  <thead>
+                    <tr>
+                      <th>Opponent profile</th>
+                      <th>Wins</th>
+                      <th>Matches</th>
+                      <th>Win rate</th>
+                      <th>Solo win rate</th>
+                      <th>Go-out TEI</th>
+                      <th>Points TEI</th>
+                      <th>Advisor win rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(Object.keys(LOCAL_AI_LABELS) as AiSkillLevel[]).map(
+                      (skill) => {
+                        const bucket = localAi[skill];
+                        const solo = unassistedMatchStats(bucket);
+                        const assisted = assistedMatchStats(bucket);
+                        const goOutRating =
+                          displayObjectiveRating(bucket, 'go-out') ??
+                          displayObjectiveTei(bucket, 'go-out');
+                        const pointsRating =
+                          displayObjectiveRating(bucket, 'points') ??
+                          displayObjectiveTei(bucket, 'points');
+                        return (
+                          <tr key={skill}>
+                            <td>{LOCAL_AI_LABELS[skill]}</td>
+                            <td>{bucket.matchesWon}</td>
+                            <td>{bucket.matchesCompleted}</td>
+                            <td>{formatWinRate(localAiWinRate(bucket))}</td>
+                            <td>
+                              {solo.matchesCompleted > 0
+                                ? formatWinRate(matchWinRate(solo))
+                                : '—'}
+                            </td>
+                            <td>
+                              {goOutRating ?? '—'}
+                              {objectiveWinRate(bucket, 'go-out') !== null && (
+                                <span className={styles.objectiveSub}>
+                                  {' '}
+                                  (
+                                  {formatWinRate(
+                                    objectiveWinRate(bucket, 'go-out')!,
+                                  )}
+                                  )
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              {pointsRating ?? '—'}
+                              {objectiveWinRate(bucket, 'points') !== null && (
+                                <span className={styles.objectiveSub}>
+                                  {' '}
+                                  (
+                                  {formatWinRate(
+                                    objectiveWinRate(bucket, 'points')!,
+                                  )}
+                                  )
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              {assisted.matchesCompleted > 0
+                                ? formatWinRate(matchWinRate(assisted))
+                                : '—'}
+                            </td>
+                          </tr>
+                        );
+                      },
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className={styles.productSection} data-product="lattice">
+        <header className={styles.productHeader}>
+          <img
+            className={styles.latticeLogo}
+            src="/SubspaceLattice-text-title-pretty.svg"
+            alt="Subspace Lattice"
+            width={200}
+            height={40}
+          />
+          <div>
+            <h2 className={styles.productTitle}>Subspace Lattice</h2>
+            <p className={styles.productLead}>
+              Separate OpenSkill pool — local AI and rated online sectors.
+            </p>
+          </div>
+        </header>
+
+        {needsSignIn ? (
+          <p className={styles.productEmpty}>
+            Sign in to see your Lattice TEI on this profile. The section stays
+            here even before your first sector.
+          </p>
+        ) : (
           <div className={styles.localAiTableWrap}>
             <table className={styles.localAiTable}>
               <thead>
                 <tr>
-                  <th>Crew</th>
-                  <th>Go-out TEI</th>
-                  <th>Go-out matches</th>
-                  <th>Points TEI</th>
-                  <th>Points matches</th>
+                  <th>Track</th>
+                  <th>TEI</th>
+                  <th>Wins</th>
+                  <th>Matches</th>
                 </tr>
               </thead>
               <tbody>
-                {crewTeiRows.map((row) => (
-                  <tr key={row.charterId}>
-                    <td>
-                      <Link to={`/crews/${row.slug}`}>{row.name}</Link>
-                    </td>
-                    <td>{row.goOutTei ?? '—'}</td>
-                    <td>{row.goOutMatches}</td>
-                    <td>{row.pointsTei ?? '—'}</td>
-                    <td>{row.pointsMatches}</td>
-                  </tr>
-                ))}
+                <tr>
+                  <td>Local AI</td>
+                  <td>
+                    {lattice.localAi.displayGrade ? (
+                      <TeiGradeText grade={lattice.localAi.displayGrade} />
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td>{lattice.localAi.wins}</td>
+                  <td>{lattice.localAi.matches}</td>
+                </tr>
+                <tr>
+                  <td>Online</td>
+                  <td>
+                    {lattice.online.displayGrade ? (
+                      <TeiGradeText grade={lattice.online.displayGrade} />
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td>{lattice.online.wins}</td>
+                  <td>{lattice.online.matches}</td>
+                </tr>
               </tbody>
             </table>
+            {lattice.localAi.matches === 0 && lattice.online.matches === 0 ? (
+              <p className={styles.productEmpty}>
+                No Lattice games yet — finish a local AI or rated online sector
+                to open a TEI track.
+              </p>
+            ) : null}
           </div>
-        </section>
-      )}
-
-      <section className={styles.localAiSection}>
-        <h2 className={styles.localAiTitle}>Practice vs AI</h2>
-        <p className={styles.localAiLead}>
-          Matches bucketed by the highest AI commission track at your table. Go-out and
-          points each have their own solo TEI track — updated only on server-verified
-          unassisted wins and losses.
-        </p>
-        <div className={styles.localAiTableWrap}>
-          <table className={styles.localAiTable}>
-            <thead>
-              <tr>
-                <th>Opponent profile</th>
-                <th>Wins</th>
-                <th>Matches</th>
-                <th>Win rate</th>
-                <th>Solo win rate</th>
-                <th>Go-out TEI</th>
-                <th>Points TEI</th>
-                <th>Advisor win rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(Object.keys(LOCAL_AI_LABELS) as AiSkillLevel[]).map((skill) => {
-                const bucket = localAi[skill];
-                const solo = unassistedMatchStats(bucket);
-                const assisted = assistedMatchStats(bucket);
-                const goOutRating = displayObjectiveRating(bucket, 'go-out') ?? displayObjectiveTei(bucket, 'go-out');
-                const pointsRating = displayObjectiveRating(bucket, 'points') ?? displayObjectiveTei(bucket, 'points');
-                return (
-                  <tr key={skill}>
-                    <td>{LOCAL_AI_LABELS[skill]}</td>
-                    <td>{bucket.matchesWon}</td>
-                    <td>{bucket.matchesCompleted}</td>
-                    <td>{formatWinRate(localAiWinRate(bucket))}</td>
-                    <td>
-                      {solo.matchesCompleted > 0
-                        ? formatWinRate(matchWinRate(solo))
-                        : '—'}
-                    </td>
-                    <td>
-                      {goOutRating ?? '—'}
-                      {objectiveWinRate(bucket, 'go-out') !== null && (
-                        <span className={styles.objectiveSub}>
-                          {' '}
-                          ({formatWinRate(objectiveWinRate(bucket, 'go-out')!)})
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {pointsRating ?? '—'}
-                      {objectiveWinRate(bucket, 'points') !== null && (
-                        <span className={styles.objectiveSub}>
-                          {' '}
-                          ({formatWinRate(objectiveWinRate(bucket, 'points')!)})
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      {assisted.matchesCompleted > 0
-                        ? formatWinRate(matchWinRate(assisted))
-                        : '—'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        )}
       </section>
 
-      {isOwnProfile && !loading && configured && (
+      {isOwnProfile && !loading && configured ? (
         <form
           className={styles.form}
           onSubmit={(event) => {
@@ -399,7 +601,8 @@ export function ProfilePage() {
               aria-describedby="call-sign-hint"
             />
             <span id="call-sign-hint" className={styles.fieldHint}>
-              Also used as your name on Warp TEI and practice ladders.
+              Used on Warp and Lattice TEI ladders, and as the default name for
+              online / pass-and-play seats (overridable per match).
             </span>
           </label>
 
@@ -457,10 +660,10 @@ export function ProfilePage() {
           </fieldset>
 
           <button type="submit" className={styles.saveBtn} disabled={saving}>
-            {saving ? 'Saving…' : 'Save profile'}
+            {saving ? 'Saving…' : 'Save Federation Profile'}
           </button>
         </form>
-      )}
+      ) : null}
     </div>
   );
 }

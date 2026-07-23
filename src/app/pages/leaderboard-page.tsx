@@ -34,6 +34,8 @@ import type {
 } from '../../firebase/schema.js';
 import styles from './leaderboard-page.module.scss';
 
+const BRIDGE_URL = 'https://warp.iwgf.org';
+
 function formatWinRate(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
@@ -206,13 +208,18 @@ export function LeaderboardPage() {
   return (
     <div className={styles.page}>
       <section className={panelStyles.panel}>
-        <p className={panelStyles.panelEyebrow}>Fleet Rankings</p>
-        <h1 className={panelStyles.panelTitle}>Leaderboard</h1>
+        <p className={panelStyles.panelEyebrow}>
+          <Link to="/leaderboard">← Federation Standings</Link>
+          {' · '}
+          Warp Dominoes
+        </p>
+        <h1 className={panelStyles.panelTitle}>Warp 12 TEI</h1>
         <p className={panelStyles.panelBody}>
           <strong>Global Official</strong> is the public Warp 12 standard — Official
           rules, declared fleet size, rated sectors and officiated nights. Friend-group{' '}
           <Link to="/crews">crew ladders</Link> are separate. Solo practice vs AI uses
-          replay-verified boards below.
+          replay-verified boards below. New to the discipline?{' '}
+          <Link to="/warp-factor">Read the Warp 12 command standard</Link>.
         </p>
       </section>
 
@@ -492,6 +499,12 @@ export function LeaderboardPage() {
           </table>
         </div>
       )}
+
+      <p className={styles.playCta}>
+        <a href={BRIDGE_URL} target="_blank" rel="noopener noreferrer">
+          Open the Bridge
+        </a>
+      </p>
     </div>
   );
 }

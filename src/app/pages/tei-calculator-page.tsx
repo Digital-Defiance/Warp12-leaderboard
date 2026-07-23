@@ -642,7 +642,7 @@ export function TeiCalculatorPage() {
           <p className={styles.footerNote}>
             Unofficial estimate — authoritative rating calculations are performed server-side.
             {result.objective === 'points' ? ' Lowest cumulative pip total wins.' : ' First empty hand wins; others ranked by tiles remaining.'}{' '}
-            Ties share competition rank. Not recorded on iwdf.org.
+            Ties share competition rank. Not recorded on iwgf.org.
           </p>
           <p className={styles.footerNote}>
             Grade key: <strong>P</strong> Provisional · <strong>I</strong> Improving · <strong>C</strong> Consistent · <strong>V</strong> Veteran · <strong>E</strong> Elite.

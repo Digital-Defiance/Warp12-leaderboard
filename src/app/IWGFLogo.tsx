@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { GALAXY_BOUNDS, GALAXY_CENTER_X, GalaxyPath } from './Galaxy';
 
-export interface IWDFLogoProps {
+export interface IWGFLogoProps {
   width?: number;
   className?: string;
   warpColor?: string;
@@ -24,7 +24,7 @@ const LOGO_HEIGHT = ACRONYM_Y;
 
 const GALAXY_TRANSFORM = `translate(${LOGO_CENTER_X - GALAXY_CENTER_X}, ${-GALAXY_BOUNDS.y})`;
 
-export const IWDFLogo: FC<IWDFLogoProps> = ({
+export const IWGFLogo: FC<IWGFLogoProps> = ({
   width,
   className,
   marginLeft,
@@ -39,22 +39,22 @@ export const IWDFLogo: FC<IWDFLogoProps> = ({
       viewBox={`0 0 ${LOGO_WIDTH} ${LOGO_HEIGHT}`}
       width={width}
       className={className}
-      aria-label="Interstellar Warp Domino Federation"
+      aria-label="Interstellar Warp Gaming Federation"
     >
       <defs>
         <style>{`
-          .cls-1 {
+          .iwgf-galaxy {
             fill: ${galaxyColor};
             fill-rule: evenodd;
           }
 
-          .cls-2 {
+          .iwgf-title {
             fill: ${textColor};
             font-family: Federation, Federation;
             font-size: ${FONT_SIZE}px;
           }
 
-          .cls-3 {
+          .iwgf-acronym {
             fill: ${warpColor};
             font-family: FederationWide, FederationWide;
             font-size: ${FONT_SIZE}px;
@@ -62,18 +62,23 @@ export const IWDFLogo: FC<IWDFLogoProps> = ({
         `}</style>
       </defs>
       <g transform={GALAXY_TRANSFORM}>
-        <GalaxyPath className="cls-1" fill={galaxyColor} />
+        <GalaxyPath className="iwgf-galaxy" fill={galaxyColor} />
       </g>
       <text
-        className="cls-2"
+        className="iwgf-title"
         textAnchor="middle"
         x={LOGO_CENTER_X}
         y={TITLE_Y}
       >
-        Interstellar Warp Domino Federation
+        Interstellar Warp Gaming Federation
       </text>
-      <text className="cls-3" textAnchor="middle" x={LOGO_CENTER_X} y={ACRONYM_Y}>
-        IWDF
+      <text
+        className="iwgf-acronym"
+        textAnchor="middle"
+        x={LOGO_CENTER_X}
+        y={ACRONYM_Y}
+      >
+        IWGF
       </text>
     </svg>
   );

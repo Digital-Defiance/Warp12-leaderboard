@@ -2,12 +2,12 @@ import path from 'node:path';
 
 import { defineConfig, devices } from '@playwright/test';
 
-const workspaceRoot = path.join(import.meta.dirname, '..');
+const packageRoot = import.meta.dirname;
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4310';
 
 export default defineConfig({
   testDir: './e2e',
-  outputDir: path.join(workspaceRoot, 'dist/.playwright/leaderboard-e2e/test-output'),
+  outputDir: path.join(packageRoot, 'dist/.playwright/test-output'),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -16,10 +16,7 @@ export default defineConfig({
     [
       'html',
       {
-        outputFolder: path.join(
-          workspaceRoot,
-          'dist/.playwright/leaderboard-e2e/playwright-report'
-        ),
+        outputFolder: path.join(packageRoot, 'dist/.playwright/playwright-report'),
         open: 'on-failure',
       },
     ],
@@ -29,10 +26,10 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'yarn preview:leaderboard',
+    command: 'yarn preview',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot,
+    cwd: packageRoot,
   },
   projects: [
     {
