@@ -109,7 +109,7 @@ export function LatticeLeaderboardPage() {
         <h1 className={panelStyles.panelTitle}>Lattice TEI</h1>
         <p className={panelStyles.panelBody}>
           A wholly new discipline under an existing charter — hubs, sensor nets,
-          and sector integration on an eleven-by-eleven void. OpenSkill ratings in{' '}
+          and sector integration on an eleven-by-eleven void. TEI ratings in{' '}
           <code>latticeTei</code> stay separate from Warp Dominoes ladders; names
           come from your{' '}
           <Link to="/profile">Federation Profile</Link> call sign.

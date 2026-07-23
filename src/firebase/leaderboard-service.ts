@@ -109,7 +109,7 @@ export async function fetchLocalAiLeaderboard(
     .map((stats) => {
       const bucket = localSkillStats(stats, skill);
       const rated = objectiveTeiStats(bucket, objective);
-      // Try new OpenSkill rating first, fall back to legacy TEI integer
+      // Try new TEI rating first, fall back to legacy TEI integer
       const ratingDisplay = displayObjectiveRating(bucket, objective) ?? displayObjectiveTei(bucket, objective);
       return {
         stats,
@@ -174,11 +174,11 @@ export async function fetchHumanPoolLeaderboard(
   return snapshot.docs
     .map((entry) => entry.data() as PlayerStatsDocument)
     .map((stats) => {
-      // Try new OpenSkill rating first
+      // Try new TEI rating first
       const ratedNew = humanObjectiveRatingStats(stats, objective);
       const ratingDisplay = displayHumanObjectiveRating(stats, objective);
       
-      // Fall back to legacy TEI integer if no OpenSkill data
+      // Fall back to legacy TEI integer if no TEI data
       const ratedLegacy = humanObjectiveTeiStats(stats, objective);
       const legacyDisplay = displayHumanObjectiveTei(stats, objective);
       
@@ -245,7 +245,7 @@ export async function fetchGroupTeiLeaderboard(
   return snapshot.docs
     .map((entry) => entry.data() as PlayerStatsDocument)
     .map((stats) => {
-      // Try new OpenSkill rating first
+      // Try new TEI rating first
       const ratedNew = groupObjectiveRatingStats(
         stats,
         charterId,

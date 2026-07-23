@@ -3,7 +3,7 @@ import type { RatedObjective } from './schema.js';
 import type { StoredRating } from './schema.js';
 
 /**
- * Leaderboard stats utilities - OpenSkill rating helpers.
+ * Leaderboard stats utilities - TEI rating helpers.
  * 
  * NOTE: All rating calculations happen server-side in Cloud Functions using OpenSkill.
  * This file provides read-only helpers and display utilities.

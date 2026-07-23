@@ -57,7 +57,7 @@ export function StandingsHubPage() {
           <span className={homeStyles.cardEyebrow}>Subspace Lattice</span>
           <span className={homeStyles.cardTitle}>Lattice TEI</span>
           <span className={homeStyles.cardBody}>
-            Local AI and rated online sectors in Lattice’s own OpenSkill pool —
+            Local AI and rated online sectors in Lattice’s own TEI pool —
             same TEI alphabet, separate standings.
           </span>
         </Link>

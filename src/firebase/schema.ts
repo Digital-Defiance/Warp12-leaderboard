@@ -117,7 +117,7 @@ export function displayObjectiveTei(
   return displayUnassistedTei(bucket.unassistedTei, bucket.unassistedMatches);
 }
 
-// New OpenSkill display functions
+// New TEI display functions
 export function displayObjectiveRating(
   stats: LocalAiSkillStats,
   objective: RatedObjective
@@ -275,7 +275,7 @@ export interface PlayerStatsDocument {
   roundsPlayed: number;
   roundsWon: number;
   totalPoints: number;
-  // New OpenSkill fields
+  // New TEI fields
   humanRating?: HumanRatingStats;
   groupRating?: Record<string, HumanRatingStats>;
   // Legacy integer TEI fields (deprecated)

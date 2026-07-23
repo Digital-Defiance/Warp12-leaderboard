@@ -589,7 +589,7 @@ export function ProfilePage() {
           <div>
             <h2 className={styles.productTitle}>Subspace Lattice</h2>
             <p className={styles.productLead}>
-              Separate OpenSkill pool — local AI and rated online sectors.
+              Separate TEI pool — local AI and rated online sectors.
             </p>
           </div>
         </header>

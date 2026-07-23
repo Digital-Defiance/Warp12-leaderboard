@@ -16,7 +16,7 @@ const consistent33: Pick<CalculatorCaptain, 'startingGrade' | 'startingRating'> 
 };
 
 describe('computeHumanTei', () => {
-  it('calculates OpenSkill ratings for three-player points match', () => {
+  it('calculates TEI ratings for three-player points match', () => {
     const captains: CalculatorCaptain[] = [
       { id: 'a', name: 'A', ...veteran67, priorMatches: 12 },
       { id: 'b', name: 'B', ...veteran67, priorMatches: 12 },

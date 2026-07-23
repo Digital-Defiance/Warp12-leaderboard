@@ -163,7 +163,7 @@ export const HomePage: FC = () => {
           <span className={styles.cardEyebrow}>Subspace Lattice</span>
           <span className={styles.cardTitle}>Lattice TEI</span>
           <span className={styles.cardBody}>
-            Local AI and rated online sectors — Lattice’s OpenSkill pool on the
+            Local AI and rated online sectors — Lattice’s TEI pool on the
             shared federation site.
           </span>
         </Link>
