@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@warp12/tei-core": "file:../Warp12/libs/tei-core",
-    "double-eighteen": "^0.5.0",
+    "double-eighteen": "^0.5.1",
     "firebase": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

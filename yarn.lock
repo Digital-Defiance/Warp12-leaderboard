@@ -1189,7 +1189,7 @@ __metadata:
     "@types/react-dom": "npm:^19.0.0"
     "@vitejs/plugin-react": "npm:^6.0.0"
     "@warp12/tei-core": "file:../Warp12/libs/tei-core"
-    double-eighteen: "npm:^0.5.0"
+    double-eighteen: "npm:^0.5.1"
     firebase: "npm:^12.15.0"
     firebase-tools: "npm:^14.0.0"
     jsdom: "npm:^27.1.0"
@@ -3359,10 +3359,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"double-eighteen@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "double-eighteen@npm:0.5.0"
-  checksum: 10c0/adb51c01dc833046707e38d9b612e670f1d8da4cadf23ea127e0922a8c9960b7c1d8d1b195992326070c3955ebc35363fda0899008193a2261aa3b65bddaadbd
+"double-eighteen@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "double-eighteen@npm:0.5.1"
+  checksum: 10c0/61afbd503d9350216a6abf0e24688af031ddfde46e45902de4b9c533df4683a8e0da0de31aade838c84f23b3fc81d5a3c7346181152e4804cb458e5711efbea5
   languageName: node
   linkType: hard
 
