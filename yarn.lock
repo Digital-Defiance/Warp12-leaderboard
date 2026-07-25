@@ -1189,7 +1189,7 @@ __metadata:
     "@types/react-dom": "npm:^19.0.0"
     "@vitejs/plugin-react": "npm:^6.0.0"
     "@warp12/tei-core": "file:../Warp12/libs/tei-core"
-    double-eighteen: "npm:^0.4.3"
+    double-eighteen: "npm:^0.5.0"
     firebase: "npm:^12.15.0"
     firebase-tools: "npm:^14.0.0"
     jsdom: "npm:^27.1.0"
@@ -1200,7 +1200,7 @@ __metadata:
     typescript: "npm:~5.9.2"
     vite: "npm:^8.0.0"
     vitest: "npm:~4.1.0"
-    warp12-engine: "npm:^0.4.27"
+    warp12-engine: "npm:^0.5.0"
   languageName: unknown
   linkType: soft
 
@@ -3359,10 +3359,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"double-eighteen@npm:^0.4.3":
-  version: 0.4.3
-  resolution: "double-eighteen@npm:0.4.3"
-  checksum: 10c0/c3ed6736623d1607d3d34ef77604ab7157e6411f164664af2479525c7346756c1c9d66c74b73d6aa85cedd584f955e491bc0030cb0c0c775606d7a7d8257a7b0
+"double-eighteen@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "double-eighteen@npm:0.5.0"
+  checksum: 10c0/adb51c01dc833046707e38d9b612e670f1d8da4cadf23ea127e0922a8c9960b7c1d8d1b195992326070c3955ebc35363fda0899008193a2261aa3b65bddaadbd
   languageName: node
   linkType: hard
 
@@ -8225,12 +8225,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"warp12-engine@npm:^0.4.27":
-  version: 0.4.27
-  resolution: "warp12-engine@npm:0.4.27"
+"warp12-engine@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "warp12-engine@npm:0.5.0"
   peerDependencies:
     double-eighteen: ">=0.4.0"
-  checksum: 10c0/723ea69cd0edf213f5d6e8ee26e354c72290a4a4525043928118c580d623bab69673499e3ad0c8d0a2024bb2c2a2fc8a9b562f80d8c951891a90948018c91f42
+  checksum: 10c0/ec0e3ba1006b86d851dec8ecf80788fe3d42b29165863f76095747dd653f0a2f124b04d2d248cfd4e6590773ebe521409b7c3a6cbe582d84ecd8c67925342be2
   languageName: node
   linkType: hard
 

@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@warp12/tei-core": "file:../Warp12/libs/tei-core",
-    "double-eighteen": "^0.4.3",
+    "double-eighteen": "^0.5.0",
     "firebase": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "6.30.3",
-    "warp12-engine": "^0.4.27"
+    "warp12-engine": "^0.5.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.37.0",
