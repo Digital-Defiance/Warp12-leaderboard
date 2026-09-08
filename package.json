@@ -18,7 +18,7 @@
     "firebase": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "6.30.3",
+    "react-router-dom": "6.30.6",
     "warp12-engine": "^0.5.0"
   },
   "devDependencies": {
